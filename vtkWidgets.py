@@ -21,7 +21,7 @@ class VTK2d(QtWidgets.QFrame):
         self.iren.GetRenderWindow().AddRenderer(self.ren)
 
 
-class VTK3d(QtWidgets.QFrame):
+class VTK3d(QtWidgets.QWidget):
     def __init__(self, parent):
         super(VTK3d, self).__init__(parent)
         # create custom renderwindowinteractor

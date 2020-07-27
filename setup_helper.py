@@ -1,5 +1,4 @@
 from markers import Markers
-from trajectories import Trajectories
 from truncated import is_truncated
 
 
@@ -12,12 +11,11 @@ def setup_data_source(mainwindow, filename):
     if len([*mainwindow.pycgm_data.Data['Markers']]) > 0:
         markers = Markers(mainwindow, num_points)
         markers.update_data(complete=True)
-        mainwindow.vtk3d_widget.ren.AddActor(markers.actor)
+        markers.set_actor()
         mainwindow.set_markers(markers)
 
         # trajectory source
-        trajectories = Trajectories(mainwindow)
-        mainwindow.set_trajectories(trajectories)
+        mainwindow.trajectories.set_marker_keys()
 
         # emitter source
         mainwindow.emitter.set_offset(offset)
@@ -33,6 +31,13 @@ def setup_data_source(mainwindow, filename):
         # pass pycgm and gap dict to Receiver for undo/redo operations
         mainwindow.gap_receiver.update_marker_data_source = markers.update_data
 
+        # set bone segments
+        mainwindow.segments.set_segment_keys()
+        mainwindow.segments.update_segments()
+
+    # forceplatforms
+    mainwindow.force_platforms.setup_fps()
+
     # plotter
     mainwindow.plotter.update_channels()
 
@@ -40,7 +45,8 @@ def setup_data_source(mainwindow, filename):
     mainwindow.explorer_widget.populate_tree()
 
     # pipelines source
-    mainwindow.pipelines.set_loaded_filepath(filename)
+    mainwindow.pipelines.clear_pipelines()
+    mainwindow.pipelines.cgm_model.set_current_angles(None)
 
     # set slider values
     mainwindow.ui.vtkScrollSlider.setMinimum(mainwindow.pycgm_data.Gen['Vid_FirstFrame'])

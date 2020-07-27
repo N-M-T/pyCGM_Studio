@@ -25,12 +25,13 @@ def traj_gen(colour=None, properties=None):
 
 class Trajectories:
     def __init__(self, mainwindow):
-        self.marker_keys = [*mainwindow.pycgm_data.Data['Markers']]
-        self.pycgm_data = mainwindow.pycgm_data
-        self.ren = mainwindow.vtk3d_widget.ren
+        self.mainwindow = mainwindow
+        self.marker_keys = []
         self.highlighted = {}
-        self.last_frame = mainwindow.pycgm_data.Gen['Vid_LastFrame']
         self.emitted = False
+
+    def set_marker_keys(self):
+        self.marker_keys = [*self.mainwindow.pycgm_data.Data['Markers']]
 
     def update_trajectories(self, selected_id, add=None, remove=None):
         if add:
@@ -39,10 +40,10 @@ class Trajectories:
                                              'lines': lnes,
                                              'polydata': plydat,
                                              'actor': act}
-            self.ren.AddActor(act)
+            self.mainwindow.vtk3d_widget.ren.AddActor(act)
 
         if remove:
-            self.ren.RemoveActor(self.highlighted[selected_id]['actor'])
+            self.mainwindow.vtk3d_widget.ren.RemoveActor(self.highlighted[selected_id]['actor'])
             del self.highlighted[selected_id]
 
     def trajectory_request(self, frame):
@@ -52,8 +53,8 @@ class Trajectories:
 
         if lower < 0:
             lower = 0
-        if upper > self.last_frame:
-            upper = self.last_frame
+        if upper > self.mainwindow.pycgm_data.Gen['Vid_LastFrame']:
+            upper = self.mainwindow.pycgm_data.Gen['Vid_LastFrame']
 
         ncoords = upper - lower
 
@@ -61,7 +62,7 @@ class Trajectories:
             if self.emitted:
                 objs['polydata'].Reset()
 
-            point_coords = self.pycgm_data.Data['Markers'][self.marker_keys[int(key)]][:3, lower:upper].T
+            point_coords = self.mainwindow.pycgm_data.Data['Markers'][self.marker_keys[int(key)]][:3, lower:upper].T
             objs['points'].SetData(vtk_np.numpy_to_vtk(point_coords))
 
             # cannot get this method to work

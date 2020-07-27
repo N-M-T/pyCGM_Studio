@@ -32,10 +32,12 @@ class VtkTimerCallback:
         iren = obj
 
         if self.timer_count < self.timer_end:
-            self.mainwindow.ui.vtkScrollSlider.setValue(self.timer_count)
+            # self.mainwindow.ui.vtkScrollSlider.setValue(self.timer_count)
+            self.mainwindow.emitter.emit(self.timer_count)
         else:
             self.timer_count = self.actual_start
-            self.mainwindow.ui.vtkScrollSlider.setValue(self.timer_count)
+            # self.mainwindow.ui.vtkScrollSlider.setValue(self.timer_count)
+            self.mainwindow.emitter.emit(self.timer_count)
             iren.ResetTimer(self.timer_ID)
 
 

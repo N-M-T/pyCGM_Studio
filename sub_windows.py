@@ -1,28 +1,41 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 
-def gen_sub(widget, kind):
-    sub_window = SubWindow(kind)
-    sub_window.layout.addWidget(widget)
-    return sub_window
-
-
 class SubWindow(QtWidgets.QWidget):
-    def __init__(self, kind, parent=None, flags=QtCore.Qt.Widget, toolbar=None):
+    def __init__(self, kind, widget, parent=None, flags=QtCore.Qt.Widget, toolbar=None):
         super(SubWindow, self).__init__(parent, flags)
-        self.layout = QtWidgets.QVBoxLayout()
-        self.CustomBar = CustomBar(self, kind, toolbar)
-        self.layout.addWidget(self.CustomBar)
-        self.setLayout(self.layout)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(0)
+        self.custom_bar = CustomBar(self, kind, toolbar)
+
+        self.vlayout = QtWidgets.QVBoxLayout()
+
+        # because of spacers, bar and widget need own hlayout, both of which are
+        self.hlayout_bar = QtWidgets.QHBoxLayout()
+        self.hlayout_bar.addWidget(self.custom_bar)
+        self.hlayout_bar.setSpacing(0)
+        self.hlayout_bar.setContentsMargins(0, 0, 9, 0)
+
+        self.hlayout_widget = QtWidgets.QHBoxLayout()
+        self.hlayout_widget.addWidget(widget)
+        self.hlayout_widget.setSpacing(0)
+
+        if kind == 'plot':
+            self.hlayout_widget.setContentsMargins(9, 3, 9, 14)
+            self.vlayout.setContentsMargins(0, 0, 0, 0)
+
+        elif kind == 'main':
+            self.vlayout.setContentsMargins(0, 5, 0, 0)
+            self.vlayout.setSpacing(0)
+
+        self.vlayout.addLayout(self.hlayout_bar)
+        self.vlayout.addLayout(self.hlayout_widget)
+        self.setLayout(self.vlayout)
         self.setMinimumWidth(20)
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 
     def set_combo_box(self, insert_at_0, insert_at_1):
-        self.CustomBar.view.clear()
-        self.CustomBar.view.addItem(insert_at_0)
-        self.CustomBar.view.addItem(insert_at_1)
+        self.custom_bar.view.clear()
+        self.custom_bar.view.addItem(insert_at_0)
+        self.custom_bar.view.addItem(insert_at_1)
 
 
 class CustomBar(QtWidgets.QWidget):
@@ -119,7 +132,3 @@ class CustomBar(QtWidgets.QWidget):
 
     def close_window(self):
         self.handle_split(action='close', kind=self.kind)
-
-
-
-

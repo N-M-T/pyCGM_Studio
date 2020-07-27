@@ -2,8 +2,9 @@ import vtk
 import utilities as ut
 import numpy as np
 from trajectories import traj_gen
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtWidgets, QtGui, QtCore
 from spline_updater import UpdateIndices
+from functools import partial
 
 
 def cone_gen():
@@ -107,6 +108,37 @@ class Gaps(object):
         self.vtk_spline_cubic = vtk_spline_gen(colour=(0.0, .3, 1.0))
         self.gap_cone_forward, self.gap_cone_actor_start = cone_gen()
         self.gap_cone_backward, self.gap_cone_actor_end = cone_gen()
+
+        self.mainwindow.ui.gapTable.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.mainwindow.ui.gapTable.itemClicked.connect(self.gap_table_selected)
+        self.mainwindow.ui.gapTable.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
+
+        style = """QTableView::item:selected { 
+                               color:white; 
+                               background:blue;}
+                           QTableCornerButton::section{
+                               background-color:#232326;}
+                           QHeaderView::section {
+                               color:black; 
+                               background-color:#f6f6f6;
+                               padding:2px;}"""
+
+        self.mainwindow.ui.gapTable.setStyleSheet(style)
+        self.mainwindow.ui.gapTable.setColumnCount(2)
+        self.mainwindow.ui.gapTable.setHorizontalHeaderLabels(['Trajectory', 'Gaps'])
+        header = self.mainwindow.ui.gapTable.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.mainwindow.ui.gapTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        self.mainwindow.ui.gapFillToolButton.clicked.connect(self.show_gap_filling)  # show/hide widget
+
+        self.mainwindow.ui.gapLeftButton.setIcon(self.mainwindow.style().standardIcon(QtWidgets.QStyle.SP_MediaSeekBackward))
+        self.mainwindow.ui.gapRightButton.setIcon(self.mainwindow.style().standardIcon(QtWidgets.QStyle.SP_MediaSeekForward))
+        self.mainwindow.ui.gapRightButton.clicked.connect(partial(self.gap_shift, 'forward'))
+        self.mainwindow.ui.gapLeftButton.clicked.connect(partial(self.gap_shift, 'backward'))
+        self.mainwindow.ui.splineButton.clicked.connect(self.spline)
+        self.mainwindow.ui.undo.clicked.connect(self.undo_operation)
 
     def init(self):
         # subscribe to spline updater. Dragged cones will update spline_indices

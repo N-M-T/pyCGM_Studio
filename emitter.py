@@ -8,7 +8,7 @@ class Emitter:
     def set_offset(self, offset):
         self.offset = offset
 
-    def emit(self, frame):
+    def emit(self, frame, from_bar=None):
         if frame == 'current':
             frame = self.current_frame
         else:
@@ -20,11 +20,19 @@ class Emitter:
         if self.offset:
             frame = frame - self.offset
 
-        if self.mainwindow.markers:
+        # show markers if data is loaded
+        if self.mainwindow.pycgm_data:
             self.mainwindow.markers.marker_request(frame)
             self.mainwindow.trajectories.trajectory_request(frame)
             self.mainwindow.gaps.ingap_request(frame)
             self.mainwindow.explorer_widget.highlight_marker_label(frame)
 
         self.mainwindow.vtk3d_widget.iren.Render()
-        self.mainwindow.plotter.update_current_line(frame)
+
+        # set slider position
+        if not self.mainwindow.ui.vtkScrollSlider.isSliderDown():
+            self.mainwindow.ui.vtkScrollSlider.setValue(frame)
+
+        # set plot progress bar if not from plot progress bar
+        if not from_bar:
+            self.mainwindow.plotter.update_current_line(frame)

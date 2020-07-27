@@ -3,6 +3,7 @@ import os
 from functools import partial
 from xml.dom import minidom
 
+
 # store directories so we can share with IconProvider
 global patient_dirs
 global session_dirs
@@ -81,9 +82,8 @@ class AlignDelegate(QtWidgets.QStyledItemDelegate):
 
 
 class Files:
-    def __init__(self, mainwindow, ui):
+    def __init__(self, mainwindow):
         self.mainwindow = mainwindow
-        self.ui = ui
         header_style = """QTableView::item:selected { 
                             color:black; 
                             background:#f6f6f6;}
@@ -96,7 +96,7 @@ class Files:
 
         # file browser model tree
         # self.path = ''
-        self.path = 'C:/Users/M.Hollands/Desktop/Example_c3d/'
+        self.path = 'C:/Users/M.Hollands/Desktop/Example_c3d/example/example/'
         # self.path = "C:/Users/M.Hollands/Desktop/pyCGM-master/SampleData/Sample_2"
         # self.path = QtCore.QDir.currentPath()
         # self.path = "C:/Users/M.Hollands/Desktop/Dunhill project/Decor/Decor_staircase_Vicon_Processed/"
@@ -136,7 +136,7 @@ class Files:
         splitter.addWidget(self.files_table)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
         splitter.setSizePolicy(size_policy)
-        self.ui.filesLayout.addWidget(splitter)
+        self.mainwindow.ui.filesLayout.addWidget(splitter)
         splitter.setCollapsible(0, False)
         splitter.setCollapsible(1, False)
 
@@ -196,17 +196,11 @@ class Files:
 
         self.files_table.resizeColumnToContents(0)
 
-    # receives signal on treeview clicked
     def tree_clicked(self, kind, signal):
+        # receives signal on treeview clicked
         path = self.model.filePath(signal)
         if kind == 'double':
-            if path[-3:] == 'c3d':
-                self.mainwindow.studio_loader.c3d_loader(path)
-                return
-
-            elif path[-3:] == 'vsk':
-                self.mainwindow.studio_loader.vsk_loader(path)
-                return
+            self.mainwindow.studio_io_ops.studio_loader(path)
 
         elif kind == 'single':
             if path in patient_dirs:
@@ -220,11 +214,7 @@ class Files:
         if path_item:
             path = path_item.text()
             if kind == 'double':
-                ext = path[-3:]
-                if ext == 'c3d':
-                    self.mainwindow.studio_loader.c3d_loader(path)
-                elif ext == 'vsk':
-                    self.mainwindow.studio_loader.vsk_loader(path)
+                self.mainwindow.studio_io_ops.studio_loader(path)
 
             elif kind == 'single':
                 if path in session_dirs:

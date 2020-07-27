@@ -1,18 +1,20 @@
 from PyQt5 import QtWidgets, QtCore
-from sub_windows import gen_sub
+from sub_windows import SubWindow
 
 
 class MultiView:
-    def __init__(self, ui, vtk3d_widget, vtk2d_widget):
+    def __init__(self, ui, vtk3d_widget, pyqtgraph2d_widget):  # vtk2d_widget):
         self.ui = ui
         self.vtk3d_widget = vtk3d_widget
-        self.vtk2d_widget = vtk2d_widget
+        # self.vtk2d_widget = vtk2d_widget
+        self.pyqtgraph2d_widget = pyqtgraph2d_widget
 
-        self.sub_window = gen_sub(widget=self.vtk3d_widget, kind='main')
-        self.plot_window = gen_sub(widget=vtk2d_widget, kind='plot')
+        self.sub_window = SubWindow(widget=self.vtk3d_widget, kind='main')
+        # self.plot_window = gen_sub(widget=vtk2d_widget, kind='plot')
+        self.plot_window = SubWindow(widget=self.pyqtgraph2d_widget, kind='plot')
 
-        self.sub_window.CustomBar.handle_split = self.handle_split
-        self.plot_window.CustomBar.handle_split = self.handle_split
+        self.sub_window.custom_bar.handle_split = self.handle_split
+        self.plot_window.custom_bar.handle_split = self.handle_split
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.splitter.addWidget(self.sub_window)
@@ -35,12 +37,14 @@ class MultiView:
             self.splitter.setCollapsible(0, False)
             self.splitter.setCollapsible(1, False)
             # ensure minimum required y axis is always visible
-            self.vtk2d_widget.setMinimumHeight(100)
+            # self.vtk2d_widget.setMinimumHeight(100)
+            self.pyqtgraph2d_widget.setMinimumHeight(100)
 
         elif action == 'close':  # we are hiding
             self.splitter.setCollapsible(0, True)
             self.splitter.setCollapsible(1, True)
-            self.vtk2d_widget.setMinimumHeight(0)
+            # self.vtk2d_widget.setMinimumHeight(0)
+            self.pyqtgraph2d_widget.setMinimumHeight(0)
 
             if kind == 'main':
                 if self.split:

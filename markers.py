@@ -5,8 +5,9 @@ import vtk.util.numpy_support as vtk_np
 
 class Markers:
     def __init__(self, mainwindow, num_points):
+        self.mainwindow = mainwindow
         self.emitted = False
-        self.points = mainwindow.pycgm_data.Data['Markers']
+        self.points = self.mainwindow.pycgm_data.Data['Markers']
         self.marker_names = [*self.points]
         self.num_points = num_points
         self.size = vtk.vtkUnsignedCharArray()
@@ -45,8 +46,10 @@ class Markers:
         self.mapper.SetScalarRange(0, self.num_points)
         self.actor = vtk.vtkActor()
         self.actor.SetMapper(self.mapper)
-
         self.vtk_markers_source = []
+
+    def set_actor(self):
+        self.mainwindow.vtk3d_widget.ren.AddActor(self.actor)
 
     def update_data(self, complete=None, individual=None):
         # create a list of numpy arrays containing each frame of marker data.
@@ -83,8 +86,8 @@ class Markers:
             self.glyph.Update()
             self.emitted = True
         except Exception as err:
-            print(err)
             # this needs resolving
+            print(err)
 
     def reset_helper(self):
         self.cloud_points.Reset()
@@ -92,6 +95,7 @@ class Markers:
 
     def remove_actors(self):
         self.mainwindow.vtk3d_widget.ren.RemoveActor(self.actor)
+
 
 
 

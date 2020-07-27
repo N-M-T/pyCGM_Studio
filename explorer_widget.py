@@ -25,11 +25,17 @@ def tree_find(tree, marker):
 class ExplorerWidget:
     def __init__(self, mainwindow):
         self.mainwindow = mainwindow
+        selmodel = self.mainwindow.ui.explorerTree.selectionModel()
+        selmodel.selectionChanged.connect(self.explorer_selected)
+        self.mainwindow.ui.explorerTree.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.highlighter = None
         self.marker_names = None
         self.model_names = None
         self.channel_names = None
         self.setup_splitter()
+
+    def clear(self):
+        self.mainwindow.ui.explorerTree.clear()
 
     def set_highlighter(self, highlighter):
         self.highlighter = highlighter
@@ -144,6 +150,26 @@ class ExplorerWidget:
                     output_child2 = QtWidgets.QTreeWidgetItem([variable])
                     output_child2.setIcon(0, QtGui.QIcon("./Resources/Images/modelchild2.png"))
                     output_child.addChild(output_child2)
+
+    def update_cgm_model_outputs(self):
+        # remove present layer
+        root = self.mainwindow.ui.explorerTree.invisibleRootItem()
+        count = root.childCount()
+        for i in range(count):
+            item = root.child(i)
+            if item.text(0) == 'PyCGM Model Outputs':
+                to_delete = self.mainwindow.ui.explorerTree.takeTopLevelItem(i)
+                del to_delete
+
+        pycgm_model_layer = QtWidgets.QTreeWidgetItem(['PyCGM Model Outputs'])
+        pycgm_model_layer.setIcon(0, QtGui.QIcon("./Resources/Images/models.png"))
+        pycgm_model_layer.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.ShowIndicator)
+        self.mainwindow.ui.explorerTree.addTopLevelItem(pycgm_model_layer)
+
+        for variable in [*self.mainwindow.pycgm_data.Data['PyCGM Model Outputs']]:
+            output_child = QtWidgets.QTreeWidgetItem([variable])
+            output_child.setIcon(0, QtGui.QIcon("./Resources/Images/modelchild2.png"))
+            pycgm_model_layer.addChild(output_child)
 
     def explorer_selected(self, selected, deselected):
         if selected:

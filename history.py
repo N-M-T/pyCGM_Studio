@@ -23,10 +23,11 @@ class UndoRedo(metaclass=ABCMeta):
 
 
 class Handler(UndoRedo):
-    def __init__(self):
+    def __init__(self, fun_str, fun):
         self._commands = {}
         self._history = [()]
         self._history_position = 0
+        self.register(fun_str, fun)
 
     @property
     def history(self):
