@@ -96,7 +96,7 @@ class Files:
 
         # file browser model tree
         # self.path = ''
-        self.path = 'C:/Users/M.Hollands/Desktop/Example_c3d/example/example/'
+        self.path = 'C:/Users/M.Hollands/Desktop/Example_c3d/example/'
         # self.path = "C:/Users/M.Hollands/Desktop/pyCGM-master/SampleData/Sample_2"
         # self.path = QtCore.QDir.currentPath()
         # self.path = "C:/Users/M.Hollands/Desktop/Dunhill project/Decor/Decor_staircase_Vicon_Processed/"

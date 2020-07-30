@@ -5,11 +5,6 @@ from threads import Worker
 from pyCGM_Single.pycgmIO import markerKeys
 
 
-# todo: print error messages to textbrowser
-def handle_error(message, err=None):
-    print(message + ': ', err)
-
-
 class CgmModel:
     def __init__(self, mainwindow):
         # todo: implement way to deal with gaps in data during modelling
@@ -68,11 +63,11 @@ class CgmModel:
     def run_static(self):
         self.current_model_kind = 'Static cgm pipeline'  # used to update status of run
         if not self.mainwindow.vsk:
-            handle_error(message="Please load vsk in Files")
+            self.mainwindow.ui.messageBrowser.setText('Load VSK in files')
             return 0
 
         if not self.set_current_array():
-            handle_error(message='Please ensure PiG marker setup is used and all markers are labelled correctly')
+            self.mainwindow.ui.messageBrowser.setText('Ensure PiG marker setup is used and all markers are labelled correctly')
             return 0
 
         try:
@@ -81,7 +76,7 @@ class CgmModel:
                                                                  self.mainwindow.vsk,
                                                                  flat_foot=False)
         except Exception as err:
-            handle_error(message='Could not calculate static offsets: ', err=err)
+            self.mainwindow.ui.messageBrowser.setText('Could not calculate static offsets. Error : ' + str(err))
             return 0
 
         else:
@@ -90,11 +85,11 @@ class CgmModel:
     def run_dynamic(self):
         self.current_model_kind = 'Dynamic cgm pipeline'
         if not self.calibrated_measurements:
-            handle_error(message="Please run static pipeline first")
+            self.mainwindow.ui.messageBrowser.setText("Run static pipeline first")
             return 0
 
         if not self.set_current_array():
-            handle_error(message='Please ensure PiG marker setup is used and all markers are labelled correctly')
+            self.mainwindow.ui.messageBrowser.setText('Ensure PiG marker setup is used and all markers are labelled correctly')
             return 0
 
         return self.gen_model_worker()  # we will start thread
@@ -117,7 +112,6 @@ class CgmModel:
 
     def thread_failed(self, intuple):
         # called by worker thread if something goes wrong
-        handle_error(message=intuple[0], err=intuple[1])
         self.mainwindow.pipelines.update_status(self.current_model_kind, status='failed')
         self.set_current_angles(None)
 

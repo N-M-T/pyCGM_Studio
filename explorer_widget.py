@@ -151,8 +151,11 @@ class ExplorerWidget:
                     output_child2.setIcon(0, QtGui.QIcon("./Resources/Images/modelchild2.png"))
                     output_child.addChild(output_child2)
 
+        self.update_cgm_model_outputs()
+
     def update_cgm_model_outputs(self):
-        # remove present layer
+        # this will be called when model is run, and also when data is loaded from a proj file
+        # remove present layer (if exists)
         root = self.mainwindow.ui.explorerTree.invisibleRootItem()
         count = root.childCount()
         for i in range(count):
@@ -163,7 +166,8 @@ class ExplorerWidget:
 
         pycgm_model_layer = QtWidgets.QTreeWidgetItem(['PyCGM Model Outputs'])
         pycgm_model_layer.setIcon(0, QtGui.QIcon("./Resources/Images/models.png"))
-        pycgm_model_layer.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.ShowIndicator)
+        if len([*self.mainwindow.pycgm_data.Data['PyCGM Model Outputs']]) > 0:
+            pycgm_model_layer.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.ShowIndicator)
         self.mainwindow.ui.explorerTree.addTopLevelItem(pycgm_model_layer)
 
         for variable in [*self.mainwindow.pycgm_data.Data['PyCGM Model Outputs']]:

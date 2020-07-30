@@ -26,6 +26,7 @@ class Emitter:
             self.mainwindow.trajectories.trajectory_request(frame)
             self.mainwindow.gaps.ingap_request(frame)
             self.mainwindow.explorer_widget.highlight_marker_label(frame)
+            self.mainwindow.segments.segment_request(frame)
 
         self.mainwindow.vtk3d_widget.iren.Render()
 

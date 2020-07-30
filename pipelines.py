@@ -122,7 +122,7 @@ class Pipelines:
 
     def run_pipelines(self, from_operation=None):
         if self.mainwindow.playing:
-            print("Please stop playback before running pipeline")
+            self.mainwindow.messages.set_text('Stop playback before running pipeline')
             return
 
         if not from_operation:

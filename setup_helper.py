@@ -31,7 +31,9 @@ def setup_data_source(mainwindow, filename):
         # pass pycgm and gap dict to Receiver for undo/redo operations
         mainwindow.gap_receiver.update_marker_data_source = markers.update_data
 
-        # set bone segments
+    # check for bones
+    mainwindow.segments.clear()
+    if len([*mainwindow.pycgm_data.Data['Bones']]) > 0:
         mainwindow.segments.set_segment_keys()
         mainwindow.segments.update_segments()
 
@@ -65,5 +67,7 @@ def setup_data_source(mainwindow, filename):
     # emit a frame of mocap
     mainwindow.emitter.emit(mainwindow.pycgm_data.Gen['Vid_FirstFrame'])
 
-    # change window title
+    # change window titles
     mainwindow.setWindowTitle('PyCGM_Studio v1.0 - ' + mainwindow.pycgm_data.Gen['FileName'][:-4])
+    mainwindow.vtk_title.set_text(mainwindow.pycgm_data.Gen['FileName'][:-4])
+    # mainwindow.vtk_title.set_actor()

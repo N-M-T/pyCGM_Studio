@@ -4,6 +4,9 @@ from pyCGM_Single.c3dez import C3DData
 from setup_helper import setup_data_source
 from threads import Worker
 import numpy as np
+import pickle
+from datetime import datetime
+import os
 
 
 def model_bones_gen():
@@ -58,8 +61,8 @@ class StudioIo:
         try:
             filename, data, delimiter, header, fmt = writeResult(result,
                                                                  self.current_filepath[:-4])
-        except Exception as err:
-            print('Could not save file :', err)
+        except Exception:
+            self.mainwindow.ui.messageBrowser.setText('Could not export file: Try running a model first')
             return 0
 
         else:
@@ -67,11 +70,11 @@ class StudioIo:
 
     def gen_worker(self, filename, data, delimiter, header, fmt):
         worker = Worker(savetxt,
-                              filename,
-                              data,
-                              delimiter=delimiter,
-                              header=header,
-                              fmt=fmt)
+                        filename,
+                        data,
+                        delimiter=delimiter,
+                        header=header,
+                        fmt=fmt)
 
         worker.signals.finished.connect(self.thread_complete)
         worker.signals.progress.connect(self.mainwindow.pipelines.update_progress_bar)
@@ -84,19 +87,17 @@ class StudioIo:
         self.mainwindow.pipelines.remove_operation('Export spreadsheet (.csv)')
         self.mainwindow.pipelines.run_pipelines(from_operation=True)
 
-    def thread_failed(self, intuple):
-        print(intuple[0], err=intuple[1])
+    def thread_failed(self):
         self.mainwindow.pipelines.update_status('Export spreadsheet (.csv)', status='failed')
 
     def studio_loader(self, path):
-        self.set_current_filepath(path)
-        ext = self.current_filepath[-3:]
+        ext = path[-3:]
         if ext == 'c3d':
-            self.c3d_loader()
+            self.c3d_loader(path)
         elif ext == 'vsk':
-            self.vsk_loader()
+            self.vsk_loader(path)
 
-    def c3d_loader(self):
+    def clear_prev_load(self):
         # clear any previous loads
         if self.mainwindow.pycgm_data:
             self.mainwindow.pycgm_data = None
@@ -114,26 +115,57 @@ class StudioIo:
                 self.mainwindow.picker.markers = None
                 self.mainwindow.highlighter.markers = None
 
+    def c3d_loader(self, path):
+        self.set_current_filepath(path)
+        self.clear_prev_load()
         QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
         try:
             if self.mainwindow.playing:
                 self.mainwindow.play_state_changed(state='Paused')
-            self.mainwindow.set_data(load_c3d(self.current_filepath))
+
+            data = load_c3d(self.current_filepath)
+
+            # load project file if exists
+            project_path = self.current_filepath[:-3] + 'proj'
+            if os.path.isfile(project_path):
+                datapickle = pickle.load(open(project_path, "rb"))
+                latest = max([*datapickle])
+                data.Data = datapickle[latest]['Data']
+                data.Gen = datapickle[latest]['Gen']
+
+            self.mainwindow.set_data(data)
+
             setup_data_source(self.mainwindow, self.current_filepath)
             QtWidgets.QApplication.restoreOverrideCursor()
 
-        except Exception as err:
-            print('Problem loading: ', err)
-            QtWidgets.QApplication.restoreOverrideCursor()
+        except Exception:
+            self.mainwindow.ui.messageBrowser.setText(
+                'Could not open file: Check file type is correct and data are valid')
+        QtWidgets.QApplication.restoreOverrideCursor()
 
-    def vsk_loader(self):
+    def vsk_loader(self, path):
         try:
-            vsk = loadVSK(self.current_filepath, dict=False)  # this needs changing as dict false returns a dict
-            self.mainwindow.explorer_widget.populate_vsk_form(self.current_filepath, vsk)
+            vsk = loadVSK(path, dict=False)  # this needs changing as dict false returns a dict
+            self.mainwindow.explorer_widget.populate_vsk_form(path, vsk)
             self.mainwindow.set_vsk(vsk)
+        except Exception:
+            self.mainwindow.ui.messageBrowser.setText('Could not load VSK')
 
-        except Exception as err:
-            print('Problem loading vsk: ', err)
+    def save_project(self):
+        try:
+            datapickle = pickle.load(open(self.current_filepath[:-3] + "proj", "rb"))
+            self.dump_pickle(datapickle)
+        except (OSError, IOError) as e:
+            self.dump_pickle()
+
+    def dump_pickle(self, datapickle=None):
+        datetimestamp = datetime.now()
+        if not datapickle:  # first save
+            datapickle = dict()
+        datapickle[str(datetimestamp)] = {'Data': self.mainwindow.pycgm_data.Data,
+                                          'Gen': self.mainwindow.pycgm_data.Gen}
+
+        pickle.dump(datapickle, open(self.current_filepath[:-3] + "proj", "wb"))
 
 
 def writeResult(data, filename, **kargs):
@@ -189,9 +221,9 @@ def writeResult(data, filename, **kargs):
     if 'delimiter' in kargs:
         delimiter = kargs['delimiter']
     if 'angles' in kargs:
-        if kargs['angles'] == True:
+        if kargs['angles']:
             outputAngs = True
-        elif kargs['angles'] == False:
+        elif not kargs['angles']:
             outputAngs = False
             labelsAngs = []
         elif isinstance(kargs['angles'], (list, tuple)):
@@ -201,9 +233,9 @@ def writeResult(data, filename, **kargs):
             labelsAngs = [i for i in labelsAngs if i in kargs['angles']]
 
     if 'axis' in kargs:
-        if kargs['axis'] == True:
+        if kargs['axis']:
             outputAxis = True
-        elif kargs['axis'] == False:
+        elif not kargs['axis']:
             outputAxis = False
             labelsAxis = []
         elif isinstance(kargs['axis'], (list, tuple)):
@@ -220,16 +252,12 @@ def writeResult(data, filename, **kargs):
 
     if outputAngs == outputAxis == False:
         return
-    elif outputAngs == False:
-        print(np.shape(data))
+    elif not outputAngs:
         dataFilter = np.transpose(data)
         dataFilter = dataFilter[SA:EA]
         dataFilter = np.transpose(dataFilter)
-        print(np.shape(dataFilter))
-        print(filterData)
         filterData = [i - SA for i in filterData]
-        print(filterData)
-    elif outputAxis == False:
+    elif not outputAxis:
         dataFilter = np.transpose(data)
         dataFilter = dataFilter[SJA:EJA]
         dataFilter = np.transpose(dataFilter)
@@ -247,9 +275,9 @@ def writeResult(data, filename, **kargs):
     headerAxis = ["Joint Coordinate", ",,,###O = Origin", ",,,###X = X axis orientation",
                   ",,,###Y = Y axis orientation", ",,,###Z = Z axis orientation"]
     for angs, axis in zip(headerAngs, headerAxis):
-        if outputAngs == True:
+        if outputAngs:
             header = header + angs + ",,," * (len(labelsAngs) - 1)
-        if outputAxis == True:
+        if outputAxis:
             header = header + axis + ",,," * (len(labelsAxis) - 1)
         header = header + "\n"
     labels = ","
@@ -281,7 +309,6 @@ from numpy.compat import (
 
 def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
             footer='', comments='# ', encoding=None, progress_callback=None):
-
     """numpy.savetxt modified to output progress """
 
     # Py3 conversions first
@@ -292,10 +319,12 @@ def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
     class WriteWrap:
         """Convert to bytes on bytestream inputs.
         """
-        def __init__(self, fh, encoding):
-            self.fh = fh
-            self.encoding = encoding
+
+        def __init__(self, ifh, iencoding):
+            self.fh = ifh
+            self.encoding = iencoding
             self.do_write = self.first_write
+            self.write = None
 
         def close(self):
             self.fh.close()
@@ -360,7 +389,7 @@ def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
         if type(fmt) in (list, tuple):
             if len(fmt) != ncol:
                 raise AttributeError('fmt has wrong shape.  %s' % str(fmt))
-            format = asstr(delimiter).join(map(asstr, fmt))
+            iformat = asstr(delimiter).join(map(asstr, fmt))
         elif isinstance(fmt, str):
             n_fmt_chars = fmt.count('%')
             error = ValueError('fmt has wrong number of %% formats:  %s' % fmt)
@@ -369,13 +398,13 @@ def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
                     fmt = [' (%s+%sj)' % (fmt, fmt), ] * ncol
                 else:
                     fmt = [fmt, ] * ncol
-                format = delimiter.join(fmt)
+                iformat = delimiter.join(fmt)
             elif iscomplex_X and n_fmt_chars != (2 * ncol):
                 raise error
-            elif ((not iscomplex_X) and n_fmt_chars != ncol):
+            elif (not iscomplex_X) and n_fmt_chars != ncol:
                 raise error
             else:
-                format = fmt
+                iformat = fmt
         else:
             raise ValueError('invalid fmt: %r' % (fmt,))
 
@@ -388,17 +417,17 @@ def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
                 for number in row:
                     row2.append(number.real)
                     row2.append(number.imag)
-                s = format % tuple(row2) + newline
+                s = iformat % tuple(row2) + newline
                 fh.write(s.replace('+-', '-'))
         else:
             length = len(X)
             for ind, row in enumerate(X):
                 try:
-                    v = format % tuple(row) + newline
+                    v = iformat % tuple(row) + newline
                 except TypeError:
                     raise TypeError("Mismatch between array dtype ('%s') and "
                                     "format specifier ('%s')"
-                                    % (str(X.dtype), format))
+                                    % (str(X.dtype), iformat))
                 fh.write(v)
 
                 progress_callback.emit((ind + 1) * 100 / length)

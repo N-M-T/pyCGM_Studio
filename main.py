@@ -1,8 +1,8 @@
-from PyQt5 import QtWidgets, QtCore, uic
+from PyQt5 import QtWidgets, QtCore, QtGui, uic
 import sys
 import os
 from gui import Ui_mainWindow
-from vtkWidgets import VTK3d, VTK2d
+from vtkWidgets import VTK3d
 from highlighter import Highlighter
 from picker import Picker
 from player_handler import Player
@@ -20,6 +20,7 @@ from plotter import GraphicsLayoutWidget
 from force_platforms import ForcePlatforms
 from trajectories import Trajectories
 from segments import Segments
+from vtk_title import VtkTitle
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -39,6 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # setup vtk3d widget
         qwidget3d = QtWidgets.QWidget()  # 3d
         self.vtk3d_widget = VTK3d(qwidget3d)
+        self.vtk_title = VtkTitle(self)
 
         # pyqtgraph widget (formally vtk2d)
         self.pyqtgraph2d_widget = GraphicsLayoutWidget()
@@ -75,11 +77,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.playButton.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaPlay))
         self.ui.playButton.clicked.connect(self.player.play)
         self.ui.playButton.setEnabled(False)
-        # self.ui.vtkScrollSlider.sliderMoved[int].connect(self.emitter.emit)
         self.ui.vtkScrollSlider.valueChanged[int].connect(self.emitter.emit)
         self.ui.vtkScrollSlider.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.ui.vtkScrollSlider.setEnabled(False)
         self.ui.vtkScrollSlider.setTickPosition(QtWidgets.QSlider.TicksAbove)
+
+        # setup toolbar
+        toolbar = self.addToolBar("File")
+        save = QtWidgets.QAction(QtGui.QIcon("./Resources/Images/save.png"), "save", self)
+        toolbar.addAction(save)
+        toolbar.actionTriggered.connect(self.studio_io_ops.save_project)
 
         # tabify dockwidgets
         self.tabifyDockWidget(self.ui.filesDock, self.ui.toolDock)

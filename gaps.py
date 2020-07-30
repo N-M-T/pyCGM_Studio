@@ -417,9 +417,8 @@ class Gaps(object):
             # perform splining operation
             np_linear_splined, np_cubic_splined = ut.spliner(y3d)
 
-        except Exception as err:
-            print('Something went wrong with splining. Likely due to lots of small gaps at very edge \
-                  of data capture area. For most cases these can be ignored', err)
+        except Exception:
+            pass
 
             if self.gaps_shown:
                 self.reset_helper()

@@ -22,13 +22,16 @@ def fp_source(centre, sizes, label):
     text_actor.SetPosition(text_centre)
     text_actor.SetOrientation(0, 0, 90)
     text_actor.SetScale(scalex)
+    text_actor.GetProperty().ShadingOff()
+    text_actor.GetProperty().LightingOff()
+    text_actor.GetProperty().SetInterpolationToFlat()
 
     # Colored faces cube setup
     cube_source = vtk.vtkCubeSource()
     cube_source.SetXLength(sizes[0])
     cube_source.SetYLength(sizes[1])
-    cube_source.SetZLength(sizes[2])
-    cube_centre = centre - (0, 0, 1)
+    cube_source.SetZLength(sizes[2] + 10)
+    cube_centre = centre - (0, 0, 10)
     cube_source.SetCenter(cube_centre)
 
     # cube_source.SetBounds(bounds)
@@ -39,6 +42,9 @@ def fp_source(centre, sizes, label):
     cube_mapper.Update()
     cube_actor = vtk.vtkActor()
     cube_actor.SetMapper(cube_mapper)
+    cube_actor.GetProperty().ShadingOff()
+    cube_actor.GetProperty().LightingOff()
+    cube_actor.GetProperty().SetInterpolationToFlat()
 
     # cube colourage
     face_colors = vtk.vtkUnsignedCharArray()

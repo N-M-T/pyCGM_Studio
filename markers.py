@@ -22,11 +22,11 @@ class Markers:
             self.size.SetTuple(i, (1, 1, 1))
 
         # point cloud
-        self.sphere = vtk.vtkSphereSource()
-        self.sphere.SetRadius(12)
-        self.sphere.SetThetaResolution(8)
-        self.sphere.SetPhiResolution(8)
-        self.sphere.Update()
+        sphere = vtk.vtkSphereSource()
+        sphere.SetRadius(12)
+        sphere.SetThetaResolution(8)
+        sphere.SetPhiResolution(8)
+        sphere.Update()
         self.cloud_points = vtk.vtkPoints()
         self.cloud_points.SetNumberOfPoints(self.num_points)
         self.poly_data = vtk.vtkPolyData()
@@ -36,16 +36,16 @@ class Markers:
         self.glyph = vtk.vtkGlyph3D()
         self.glyph.SetGeneratePointIds(True)
         self.glyph.SetInputData(self.poly_data)
-        self.glyph.SetSourceConnection(self.sphere.GetOutputPort())
+        self.glyph.SetSourceConnection(sphere.GetOutputPort())
         self.glyph.SetScaleModeToScaleByScalar()
         self.glyph.Update()
-        self.mapper = vtk.vtkPolyDataMapper()
-        self.mapper.SetInputConnection(self.glyph.GetOutputPort())
-        self.mapper.SetScalarModeToUsePointFieldData()
-        self.mapper.SelectColorArray(1)
-        self.mapper.SetScalarRange(0, self.num_points)
+        mapper = vtk.vtkPolyDataMapper()
+        mapper.SetInputConnection(self.glyph.GetOutputPort())
+        mapper.SetScalarModeToUsePointFieldData()
+        mapper.SelectColorArray(1)
+        mapper.SetScalarRange(0, self.num_points)
         self.actor = vtk.vtkActor()
-        self.actor.SetMapper(self.mapper)
+        self.actor.SetMapper(mapper)
         self.vtk_markers_source = []
 
     def set_actor(self):
@@ -85,9 +85,9 @@ class Markers:
             self.poly_data.Modified()
             self.glyph.Update()
             self.emitted = True
-        except Exception as err:
+        except Exception:
             # this needs resolving
-            print(err)
+            pass
 
     def reset_helper(self):
         self.cloud_points.Reset()

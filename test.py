@@ -144,7 +144,6 @@ def create_dict(angles):
 
     return angles_dict'''
 
-
 from numpy.compat import (
     asstr, asunicode, bytes, os_fspath, os_PathLike
 )
@@ -152,7 +151,6 @@ from numpy.compat import (
 
 def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
             footer='', comments='# ', encoding=None, progress_callback=None):
-
     # Py3 conversions first
     if isinstance(fmt, bytes):
         fmt = asstr(fmt)
@@ -161,6 +159,7 @@ def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
     class WriteWrap:
         """Convert to bytes on bytestream inputs.
         """
+
         def __init__(self, fh, encoding):
             self.fh = fh
             self.encoding = encoding
@@ -194,7 +193,7 @@ def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
     if isinstance(fname, os_PathLike):
         fname = os_fspath(fname)
     if isinstance(fname, str):
-    # if _is_string_like(fname):
+        # if _is_string_like(fname):
         # datasource doesn't support creating a new file ...
         open(fname, 'wt').close()
         fh = np.lib._datasource.open(fname, 'wt', encoding=encoding)
@@ -285,87 +284,195 @@ def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
 import vtk
 
 
-def main():
-    # Create the polydata where we will store all the geometric data
-    linesPolyData = vtk.vtkPolyData()
+'''def main():
+    #  Decide what approach to use.
+    use_function_callback = True
 
-    # Create three points
-    origin = [0.0, 0.0, 0.0]
-    p0 = [1.0, 0.0, 0.0]
-    p1 = [0.0, 1.0, 0.0]
+    colors = vtk.vtkNamedColors()
 
-    # Create a vtkPoints container and store the points in it
-    pts = vtk.vtkPoints()
-    pts.InsertNextPoint(origin)
-    pts.InsertNextPoint(p0)
-    pts.InsertNextPoint(p1)
+    # Create the Renderer, RenderWindow and RenderWindowInteractor.
+    ren = vtk.vtkRenderer()
+    renWin = vtk.vtkRenderWindow()
+    renWin.AddRenderer(ren)
+    iren = vtk.vtkRenderWindowInteractor()
+    iren.SetRenderWindow(renWin)
 
-    # Add the points to the polydata container
-    linesPolyData.SetPoints(pts)
+    # Use a cone as a source.
+    source = vtk.vtkConeSource()
+    source.SetCenter(0, 0, 0)
+    source.SetRadius(1)
+    # Use the golden ratio for the height. Because we can!
+    source.SetHeight(1.6180339887498948482)
+    source.SetResolution(128)
+    source.Update()
 
-    # Create the first line (between Origin and P0)
-    line0 = vtk.vtkLine()
-    line0.GetPointIds().SetId(0, 0)  # the second 0 is the index of the Origin in linesPolyData's points
-    line0.GetPointIds().SetId(1, 1)  # the second 1 is the index of P0 in linesPolyData's points
-
-    # Create the second line (between Origin and P1)
-    line1 = vtk.vtkLine()
-    line1.GetPointIds().SetId(0, 0)  # the second 0 is the index of the Origin in linesPolyData's points
-    line1.GetPointIds().SetId(1, 2)  # 2 is the index of P1 in linesPolyData's points
-
-    # Create a vtkCellArray container and store the lines in it
-    lines = vtk.vtkCellArray()
-    lines.InsertNextCell(line0)
-    lines.InsertNextCell(line1)
-
-    # Add the lines to the polydata container
-    linesPolyData.SetLines(lines)
-
-    namedColors = vtk.vtkNamedColors()
-
-    # Create a vtkUnsignedCharArray container and store the colors in it
-    colors = vtk.vtkUnsignedCharArray()
-    colors.SetNumberOfComponents(3)
-    try:
-        colors.InsertNextTupleValue(namedColors.GetColor3ub("Tomato"))
-        colors.InsertNextTupleValue(namedColors.GetColor3ub("Mint"))
-    except AttributeError:
-        # For compatibility with new VTK generic data arrays.
-        colors.InsertNextTypedTuple(namedColors.GetColor3ub("Tomato"))
-        colors.InsertNextTypedTuple(namedColors.GetColor3ub("Mint"))
-
-    # Color the lines.
-    # SetScalars() automatically associates the values in the data array passed as parameter
-    # to the elements in the same indices of the cell data array on which it is called.
-    # This means the first component (red) of the colors array
-    # is matched with the first component of the cell array (line 0)
-    # and the second component (green) of the colors array
-    # is matched with the second component of the cell array (line 1)
-    linesPolyData.GetCellData().SetScalars(colors)
-
-    # Setup the visualization pipeline
+    # Pipeline
     mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInputData(linesPolyData)
-
+    mapper.SetInputConnection(source.GetOutputPort())
     actor = vtk.vtkActor()
     actor.SetMapper(mapper)
-    actor.GetProperty().SetLineWidth(4)
+    actor.GetProperty().SetColor(colors.GetColor3d("peacock"))
+    # Lighting
+    actor.GetProperty().SetAmbient(0.3)
+    actor.GetProperty().SetDiffuse(0.0)
+    actor.GetProperty().SetSpecular(1.0)
+    actor.GetProperty().SetSpecularPower(20.0)
 
-    renderer = vtk.vtkRenderer()
-    renderer.AddActor(actor)
-    renderer.SetBackground(namedColors.GetColor3d("SlateGray"))
+    # Get an outline of the data set for context.
+    outline = vtk.vtkOutlineFilter()
+    outline.SetInputData(source.GetOutput())
+    outlineMapper = vtk.vtkPolyDataMapper()
+    outlineMapper.SetInputConnection(outline.GetOutputPort())
+    outlineActor = vtk.vtkActor()
+    outlineActor.GetProperty().SetColor(colors.GetColor3d("Black"))
+    outlineActor.SetMapper(outlineMapper)
 
-    window = vtk.vtkRenderWindow()
-    window.SetWindowName("Colored Lines")
-    window.AddRenderer(renderer)
+    # Add the actors to the renderer, set the background and size.
+    ren.AddActor(actor)
+    ren.AddActor(outlineActor)
+    ren.SetBackground(colors.GetColor3d("AliceBlue"))
+    renWin.SetSize(512, 512)
 
-    interactor = vtk.vtkRenderWindowInteractor()
-    interactor.SetRenderWindow(window)
+    # Set up a nice camera position.
+    camera = vtk.vtkCamera()
+    camera.SetPosition(4.6, -2.0, 3.8)
+    camera.SetFocalPoint(0.0, 0.0, 0.0)
+    camera.SetClippingRange(3.2, 10.2)
+    camera.SetViewUp(0.3, 1.0, 0.13)
+    ren.SetActiveCamera(camera)
 
-    # Visualize
-    window.Render()
-    interactor.Start()
+    renWin.Render()
+    renWin.SetWindowName("CallBack")
+
+    axes1 = MakeAxesActor()
+    om1 = vtk.vtkOrientationMarkerWidget()
+    om1.SetOrientationMarker(axes1)
+    # Position lower left in the viewport.
+    om1.SetViewport(0, 0, 0.2, 0.2)
+    om1.SetInteractor(iren)
+    om1.EnabledOn()
+    om1.InteractiveOn()
+
+    # Set up the callback.
+    if use_function_callback:
+        # We are going to output the camera position when the event is triggered
+        #  so we add the active camera as an attribute.
+        GetOrientation.cam = ren.GetActiveCamera()
+        # Register the callback with the object that is observing.
+        iren.AddObserver('EndInteractionEvent', GetOrientation)
+        iren.AddObserver('TimerEvent', GetOrientation)
+    else:
+        iren.AddObserver('EndInteractionEvent', OrientationObserver(ren.GetActiveCamera()))
+        # Or:
+        # observer = OrientationObserver(ren.GetActiveCamera())
+        # iren.AddObserver('EndInteractionEvent', observer)
+
+    iren.Initialize()
+    iren.Start()
+
+
+def GetOrientation(caller, ev):
+    """
+    Print out the orientation.
+
+    We must do this before we register the callback in the calling function.
+        GetOrientation.cam = ren.GetActiveCamera()
+
+    :param caller:
+    :param ev: The event.
+    :return:
+    """
+    # Just do this to demonstrate who called callback and the event that triggered it.
+    print(caller.GetClassName(), "Event Id:", ev)
+    # Now print the camera orientation.
+    CameraOrientation(GetOrientation.cam)
+
+
+class OrientationObserver(object):
+    def __init__(self, cam):
+        self.cam = cam
+
+    def __call__(self, caller, ev):
+        # Just do this to demonstrate who called callback and the event that triggered it.
+        print(caller.GetClassName(), "Event Id:", ev)
+        # Now print the camera orientation.
+        CameraOrientation(self.cam)
+
+
+def CameraOrientation(cam):
+    fmt1 = "{:>15s}"
+    fmt2 = "{:9.6g}"
+    print(fmt1.format("Position:"), ', '.join(map(fmt2.format, cam.GetPosition())))
+    print(fmt1.format("Focal point:"), ', '.join(map(fmt2.format, cam.GetFocalPoint())))
+    print(fmt1.format("Clipping range:"), ', '.join(map(fmt2.format, cam.GetClippingRange())))
+    print(fmt1.format("View up:"), ', '.join(map(fmt2.format, cam.GetViewUp())))
+    print(fmt1.format("Distance:"), fmt2.format(cam.GetDistance()))
+
+
+def MakeAxesActor():
+    axes = vtk.vtkAxesActor()
+    axes.SetShaftTypeToCylinder()
+    axes.SetXAxisLabelText('X')
+    axes.SetYAxisLabelText('Y')
+    axes.SetZAxisLabelText('Z')
+    axes.SetTotalLength(1.0, 1.0, 1.0)
+    axes.SetCylinderRadius(0.5 * axes.GetCylinderRadius())
+    axes.SetConeRadius(1.025 * axes.GetConeRadius())
+    axes.SetSphereRadius(1.5 * axes.GetSphereRadius())
+    return axes
 
 
 if __name__ == '__main__':
+    main()'''
+
+
+class vtkHoverCallback:
+    def __init__(self):
+        """callback"""
+
+    def execute(self, event, calldata):
+        print(event, calldata)
+        '''if event:
+            if event == 'TimerEvent':
+                print('hovering')
+            if event == 'EndInteractionEvent':
+                print('moving')'''
+
+
+def main():
+    # A renderer and render window
+    renderer = vtk.vtkRenderer()
+    renderWindow = vtk.vtkRenderWindow()
+    renderWindow.SetSize(640, 480)
+    renderWindow.AddRenderer(renderer)
+    iren = vtk.vtkRenderWindowInteractor()
+    iren.SetRenderWindow(renderWindow)
+
+    source = vtk.vtkSphereSource()
+    source.SetRadius(5)
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInputConnection(source.GetOutputPort())
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+    renderer.AddActor(actor)
+    
+    hover_widget = vtk.vtkHoverWidget()
+    hover_widget.SetInteractor(iren)
+    hover_widget.SetTimerDuration(1000)
+
+    hover_callback = vtkHoverCallback()
+    hover_widget.AddObserver('TimerEvent', hover_callback.execute)
+    # hover_callback.AddObserver('MouseMoveEvent', hover_callback.execute)
+
+    # Render and interact
+    renderWindow.Render()
+
+    hover_widget.On()
+
+    # Start
+    iren.Initialize()
+    iren.Start()
+
+
+if __name__ == "__main__":
     main()
