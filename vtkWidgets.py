@@ -28,11 +28,6 @@ class VTK3d(QtWidgets.QWidget):
         self.iren = QVTKRenderWindowInteractorMod()
         self.pycgm_trackball_style = PycgmTrackballStyle(self.iren)
         self.iren.SetInteractorStyle(self.pycgm_trackball_style)
-        self.pycgm_drag_actor_style = PycgmDragActorStyle(self.iren)
-
-        self.vl = QtWidgets.QHBoxLayout()
-        self.vl.addWidget(self.iren)
-        self.setLayout(self.vl)
 
         # renderer
         self.ren = vtk.vtkRenderer()
@@ -40,6 +35,11 @@ class VTK3d(QtWidgets.QWidget):
         # add renderer to custom renderwindowinteractor
         self.render_window = self.iren.GetRenderWindow()
         self.render_window.AddRenderer(self.ren)
+        self.pycgm_drag_actor_style = PycgmDragActorStyle(self.iren, self.ren)
+
+        self.vl = QtWidgets.QHBoxLayout()
+        self.vl.addWidget(self.iren)
+        self.setLayout(self.vl)
 
         # camera
         self.camera = self.ren.GetActiveCamera()

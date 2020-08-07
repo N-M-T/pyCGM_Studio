@@ -61,7 +61,7 @@ class ExplorerWidget:
         self.mainwindow.ui.explorerTree.addTopLevelItem(analog_layer)
 
         # model outputs
-        model_layer = QtWidgets.QTreeWidgetItem(["Model Outputs"])
+        model_layer = QtWidgets.QTreeWidgetItem(["Manufacturer Model Outputs"])
         model_layer.setIcon(0, QtGui.QIcon("./Resources/Images/models.png"))
         self.mainwindow.ui.explorerTree.addTopLevelItem(model_layer)
 

@@ -67,7 +67,8 @@ class CgmModel:
             return 0
 
         if not self.set_current_array():
-            self.mainwindow.ui.messageBrowser.setText('Ensure PiG marker setup is used and all markers are labelled correctly')
+            self.mainwindow.ui.messageBrowser.setText('Ensure PiG marker setup is used and all markers are labelled '
+                                                      'correctly')
             return 0
 
         try:
@@ -89,7 +90,8 @@ class CgmModel:
             return 0
 
         if not self.set_current_array():
-            self.mainwindow.ui.messageBrowser.setText('Ensure PiG marker setup is used and all markers are labelled correctly')
+            self.mainwindow.ui.messageBrowser.setText('Ensure PiG marker setup is used and all markers are labelled '
+                                                      'correctly')
             return 0
 
         return self.gen_model_worker()  # we will start thread

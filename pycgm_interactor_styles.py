@@ -199,17 +199,17 @@ class PycgmTrackballStyle(vtk.vtkInteractorStyleTrackballActor):
 
 
 class PycgmDragActorStyle(vtk.vtkInteractorStyleTrackballActor):
-    def __init__(self, iren, parent=None):
+    def __init__(self, iren, ren, parent=None):
         self.AddObserver('LeftButtonReleaseEvent', self.left_release)
         self.AddObserver("MouseMoveEvent", self.mouse_move)
         self.RemoveObservers("MiddleButtonPressEvent")
         self.RemoveObservers("RightButtonPressEvent")
         self.RemoveObservers("CharEvent")
-
         self.left_pressed = False
         self.cone_dir = None
         self.iren = iren
-        self.ren_win = self.iren.GetRenderWindow()
+        self.ren = ren
+        self.ren_win = iren.GetRenderWindow()
         self.start_base_x = 0.
         self.end_base_x = 0.
         self.picker = None
@@ -230,23 +230,35 @@ class PycgmDragActorStyle(vtk.vtkInteractorStyleTrackballActor):
         self.cone_dir = cone_dir
         self.left_pressed = True
 
+    def display_to_world(self, display_coords):
+        self.ren.SetDisplayPoint(display_coords)
+        self.ren.DisplayToView()
+        self.ren.GetViewPoint()
+        self.ren.ViewToWorld()
+        world_coords = self.ren.GetWorldPoint()
+        return np.asarray(world_coords)[:-1]
+
     def mouse_move(self, obj, event):
         """This method is a quick hack to get the cones draggable.
         Needs cleaning up and modifying so the cursor is bound to cone
         boundary"""
-        last_x = self.iren.GetLastEventPosition()[0]
-        new_x = self.iren.GetEventPosition()[0]
-        delta = last_x - new_x
+        last_pos = self.iren.GetLastEventPosition()
+        next_pos = self.iren.GetEventPosition()
+        last_disp_coords = np.asarray([last_pos[0], last_pos[1], 0])
+        next_disp_coords = np.asarray([next_pos[0], next_pos[1], 0])
+        last_world_coords = self.display_to_world(last_disp_coords)
+        next_world_coords = self.display_to_world(next_disp_coords)
+        world_direction = (last_world_coords - next_world_coords)[0]
 
-        if delta > 0:
-            direction = "left"
-        elif delta < 0:
-            direction = "right"
+        if world_direction > 0:
+            direction = 'forwards'
+        elif world_direction < 0:
+            direction = 'backwards'
         else:
-            direction = 'stationary'
+            direction = 'none'
 
         if self.cone_dir == 'start':
-            if direction == 'right':
+            if direction == 'backwards':
                 self.start_base_x += .5
                 if self.start_base_x.is_integer():
                     ind = str(int(self.start_base_x))
@@ -257,24 +269,24 @@ class PycgmDragActorStyle(vtk.vtkInteractorStyleTrackballActor):
                         self.start_base_x -= .5
                         return
 
-            elif direction == 'left':
-                if self.start_base_x > 0:  # we have already moved left
-                    self.start_base_x -= .5  # count down again
+            elif direction == 'forwards':
+                if self.start_base_x > 0:
+                    self.start_base_x -= .5
                     if self.start_base_x.is_integer():
                         ind = str(int(self.start_base_x))
                         self.gaps.set_dragged_start(ind)
                         self.ren_win.Render()
 
         if self.cone_dir == 'end':
-            if direction == 'right':
-                if self.end_base_x > 0:  # we have already moved left
-                    self.end_base_x -= .5  # count down again
+            if direction == 'backwards':
+                if self.end_base_x > 0:
+                    self.end_base_x -= .5
                     if self.end_base_x.is_integer():
                         ind = str(int(self.end_base_x))
                         self.gaps.set_dragged_end(ind)
                         self.ren_win.Render()
 
-            elif direction == 'left':
+            elif direction == 'forwards':
                 self.end_base_x += .5
                 if self.end_base_x.is_integer():
                     ind = str(int(self.end_base_x))

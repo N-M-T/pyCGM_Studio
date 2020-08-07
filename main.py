@@ -94,6 +94,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.toolDock.setVisible(False)
         self.ui.cgmPipelinesDock.setVisible(False)
 
+        self.read_settings()
+
     def set_data(self, data):
         # called by setup helper when new data is loaded. This is the main data store
         self.pycgm_data = data
@@ -105,6 +107,30 @@ class MainWindow(QtWidgets.QMainWindow):
     def set_vsk(self, vsk):
         # vsk are Vicon way of storing subject parameters (e.g. leg length, bodymass etc.)
         self.vsk = vsk
+
+    def closeEvent(self, event):
+        settings = QtCore.QSettings()
+        settings.setValue('geometry', self.saveGeometry())
+        settings.setValue('windowState', self.saveState())
+        settings.setValue('pipeline', self.pipelines.tree_state)
+        self.pipelines.update_pipeline_order()
+        settings.setValue('pipeline_order', self.pipelines.key_order)
+        settings.sync()
+        super(MainWindow, self).closeEvent(event)
+
+    def read_settings(self):
+        settings = QtCore.QSettings()
+        geometry_state = settings.value("geometry")
+        window_state = settings.value("windowState")
+        if geometry_state:
+            self.restoreGeometry(geometry_state)
+            self.restoreState(window_state)
+
+        pipeline = settings.value("pipeline")
+        pipeline_order = settings.value("pipeline_order")
+        if pipeline and pipeline_order:
+            self.pipelines.restore_pipeline_order(pipeline_order, pipeline)
+            self.pipelines.restore_pipeline()
 
 
 if __name__ == "__main__":
@@ -118,6 +144,8 @@ if __name__ == "__main__":
     app = QtCore.QCoreApplication.instance()
     if app is None:
         app = QtWidgets.QApplication(sys.argv)
+        app.setOrganizationDomain('ltd')
+        app.setOrganizationName('alg')
 
     mainWindow = MainWindow()
     mainWindow.show()
