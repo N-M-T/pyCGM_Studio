@@ -1,26 +1,26 @@
 from PyQt5 import QtWidgets, QtCore, QtGui, uic
 import sys
 import os
-from gui import Ui_mainWindow
-from vtkWidgets import VTK3d
-from highlighter import Highlighter
-from picker import Picker
-from player_handler import Player
-from emitter import Emitter
-from explorer_widget import ExplorerWidget
-from multiview import MultiView
-from plotter import Plotter
-from gaps import Gaps
-from pycgm_interactor_styles import ChangeStyles
-from history import Handler, SaveSplineCommand, GapReceiver
-from files_widget import Files
-from pipelines import Pipelines
-from studio_io import StudioIo
-from plotter import GraphicsLayoutWidget
-from force_platforms import ForcePlatforms
-from trajectories import Trajectories
-from segments import Segments
-from vtk_title import VtkTitle
+from gui.gui import Ui_mainWindow
+from vis_support.vtkWidgets import VTK3d
+from vis_support.highlighter import Highlighter
+from vis_support.picker import Picker
+from vis_support.player_handler import Player
+from vis_support.emitter import Emitter
+from acquisition_explorer.explorer_widget import ExplorerWidget
+from gui.multiview import MultiView
+from vis_support.plotter import Plotter
+from cgm_operations.gaps import Gaps
+from vis_support.pycgm_interactor_styles import ChangeStyles
+from core_operations.history import Handler, SaveSplineCommand, GapReceiver
+from studioio.files_widget import Files
+from cgm_operations.pipelines import Pipelines
+from studioio.studio_io import StudioIo
+from vis_support.plotter import GraphicsLayoutWidget
+from vis_cgm.force_platforms import ForcePlatforms
+from vis_cgm.trajectories import Trajectories
+from vis_cgm.segments import Segments
+from vis_cgm.vtk_title import VtkTitle
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -33,7 +33,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.markers = None
         self.vsk = None
 
-        import gui
+        from gui import gui
         self.ui = gui.Ui_mainWindow()
         self.ui.setupUi(self)
 
@@ -66,7 +66,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.force_platforms = ForcePlatforms(self)
         self.segments = Segments(self)
 
-        # pass methods to vtk styles enabling picking and highlighting etc.
+        # pass methods to vis_toolkit styles enabling picking and highlighting etc.
         self.vtk3d_widget.pycgm_trackball_style.set_picker(self.picker)
         self.vtk3d_widget.pycgm_drag_actor_style.set_picker(self.picker)
         self.vtk3d_widget.pycgm_drag_actor_style.set_gaps(self.gaps)
@@ -109,12 +109,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vsk = vsk
 
     def closeEvent(self, event):
+        self.studio_io_ops.save_dialog()
         settings = QtCore.QSettings()
         settings.setValue('geometry', self.saveGeometry())
         settings.setValue('windowState', self.saveState())
         settings.setValue('pipeline', self.pipelines.tree_state)
         self.pipelines.update_pipeline_order()
         settings.setValue('pipeline_order', self.pipelines.key_order)
+        settings.setValue('tree_last_index', self.files.save_state())
         settings.sync()
         super(MainWindow, self).closeEvent(event)
 
@@ -132,13 +134,17 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pipelines.restore_pipeline_order(pipeline_order, pipeline)
             self.pipelines.restore_pipeline()
 
+        last_dir = settings.value('tree_last_index')
+        if last_dir:
+            self.files.load_state(last_dir)
+
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
 
     # recompile ui
-    with open("Gui.ui") as ui_file:
-        with open("Gui.py", "w") as py_ui_file:
+    with open("gui/gui.ui") as ui_file:
+        with open("gui/gui.py", "w") as py_ui_file:
             uic.compileUi(ui_file, py_ui_file)
 
     app = QtCore.QCoreApplication.instance()

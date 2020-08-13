@@ -80,14 +80,14 @@ class CustomBar(QtWidgets.QWidget):
                     }"""
 
         self.split_horizontal = QtWidgets.QPushButton()
-        self.split_horizontal.setIcon(QtGui.QIcon('./Resources/images/divisionhorizontal.png'))
+        self.split_horizontal.setIcon(QtGui.QIcon('./Resources/Images/divisionhorizontal.png'))
         self.split_horizontal.setIconSize(QtCore.QSize(btn_size - 2.5, btn_size - 2))
         self.split_horizontal.clicked.connect(self.split_horizontally)
         self.split_horizontal.setFixedSize(btn_size, btn_size)
         self.split_horizontal.setStyleSheet(style_sheet)
 
         self.close = QtWidgets.QPushButton()
-        self.close.setIcon(QtGui.QIcon('./Resources/images/close.png'))
+        self.close.setIcon(QtGui.QIcon('./Resources/Images/close.png'))
         self.close.setIconSize(QtCore.QSize(btn_size - 7, btn_size - 7))
         self.close.clicked.connect(self.close_window)
         self.close.setFixedSize(btn_size, btn_size)

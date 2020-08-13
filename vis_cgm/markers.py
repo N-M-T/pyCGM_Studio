@@ -53,7 +53,7 @@ class Markers:
 
     def update_data(self, complete=None, individual=None):
         # create a list of numpy arrays containing each frame of marker data.
-        # vtk numpy support then allocates array to point cloud at marker frame
+        # vis_toolkit numpy support then allocates array to point cloud at marker frame
         # request.
         # update all marker trajectories
         if complete:

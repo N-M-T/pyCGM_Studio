@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtCore
-from sub_windows import SubWindow
+from gui.sub_windows import SubWindow
 
 
 class MultiView:

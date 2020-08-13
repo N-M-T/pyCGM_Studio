@@ -1,9 +1,9 @@
 import vtk
-import utilities as ut
+from core_operations import utilities as ut
 import numpy as np
-from trajectories import traj_gen
+from vis_cgm.trajectories import traj_gen
 from PyQt5 import QtWidgets, QtGui, QtCore
-from spline_updater import UpdateIndices
+from core_operations.spline_updater import UpdateIndices
 from functools import partial
 
 
@@ -83,7 +83,7 @@ def vtk_spline_gen(colour):
 
 
 def set_spline(vtk_spline, spline):
-    """update vtk stuff with spline"""
+    """update vis_toolkit stuff with spline"""
     sub_length = 0
     ind_list = []
     for ind, coord in enumerate(spline):
@@ -424,7 +424,7 @@ class Gaps(object):
                 self.reset_helper()
             return
 
-        # prepare vtk actors and visuals
+        # prepare vis_toolkit actors and visuals
         if not self.gaps_shown:
             self.add_gap_actors()
             self.gaps_shown = True
@@ -440,7 +440,7 @@ class Gaps(object):
         # update mainwindow.ui with current gap length
         self.mainwindow.ui.currentGapLength.setText(str(len(self.current_spline)))
 
-        # set vtk stuff with spline
+        # set vis_toolkit stuff with spline
         set_spline(self.vtk_spline_linear, np_linear_splined)
         set_spline(self.vtk_spline_cubic, np_cubic_splined)
 
@@ -448,7 +448,7 @@ class Gaps(object):
         self.set_forward_cone(start=start)
         self.set_backward_cone(end=end)
 
-        # modify vtk polydata
+        # modify vis_toolkit polydata
         self.vtk_spline_linear['polydata'].Modified()
         self.vtk_spline_cubic['polydata'].Modified()
 

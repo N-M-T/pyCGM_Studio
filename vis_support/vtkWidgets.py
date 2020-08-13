@@ -1,9 +1,9 @@
 import vtk
-from QVTKRenderWindowInteractorMod import QVTKRenderWindowInteractorMod
+from vis_support.QVTKRenderWindowInteractorMod import QVTKRenderWindowInteractorMod
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from pycgm_interactor_styles import PycgmTrackballStyle, PycgmDragActorStyle
+from vis_support.pycgm_interactor_styles import PycgmTrackballStyle, PycgmDragActorStyle
 from PyQt5 import QtWidgets
-from floorplane import build_plane
+from vis_cgm.floorplane import build_plane
 
 
 class VTK2d(QtWidgets.QFrame):

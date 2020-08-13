@@ -1,5 +1,6 @@
-from markers import Markers
-from truncated import is_truncated
+import numpy as np
+from vis_cgm.markers import Markers
+from core_operations.truncated import is_truncated
 
 
 def setup_data_source(mainwindow, filename):
@@ -33,9 +34,11 @@ def setup_data_source(mainwindow, filename):
 
     # check for bones
     mainwindow.segments.clear()
-    if len([*mainwindow.pycgm_data.Data['Bones']]) > 0:
-        mainwindow.segments.set_segment_keys()
-        mainwindow.segments.update_segments()
+    if len([*mainwindow.pycgm_data.Data['Bones']]) > 0:  # manufacturer bones
+        mainwindow.segments.set_segment_data()
+    elif len([*mainwindow.pycgm_data.Data['pyCGM Bones']]) > 0:  # pycgm bones
+        mainwindow.segments.set_segment_data(pycgm=True)
+    mainwindow.segments.update_segments()
 
     # forceplatforms
     mainwindow.force_platforms.setup_fps()
@@ -49,6 +52,13 @@ def setup_data_source(mainwindow, filename):
     # pipelines source
     mainwindow.pipelines.clear_pipelines()
     mainwindow.pipelines.cgm_model.set_current_angles(None)
+
+    # If we already have model outputs, set them
+    arrs = []
+    if len([*mainwindow.pycgm_data.Data['PyCGM Model Outputs']]) > 0:
+        for key, arr in mainwindow.pycgm_data.Data['PyCGM Model Outputs'].items():
+            arrs.append(arr.T)
+        mainwindow.pipelines.cgm_model.set_current_angles(np.concatenate(arrs, axis=1))
 
     # set slider values
     mainwindow.ui.vtkScrollSlider.setMinimum(mainwindow.pycgm_data.Gen['Vid_FirstFrame'])
@@ -70,4 +80,3 @@ def setup_data_source(mainwindow, filename):
     # change window titles
     mainwindow.setWindowTitle('PyCGM_Studio v1.0 - ' + mainwindow.pycgm_data.Gen['FileName'][:-4])
     mainwindow.vtk_title.set_text(mainwindow.pycgm_data.Gen['FileName'][:-4])
-    # mainwindow.vtk_title.set_actor()

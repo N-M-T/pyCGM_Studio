@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
-from studio_cgm import CgmModel
+from cgm_operations.studio_cgm import CgmModel
 from functools import partial
 
 
@@ -134,6 +134,7 @@ class Pipelines(QtWidgets.QWidget):
                 self.operation_stack.append(operation_name)
 
     def run_pipelines(self, from_operation=None):
+        self.mainwindow.emitter.emit('current')
         if self.mainwindow.playing:
             self.mainwindow.messages.set_text('Stop playback before running pipeline')
             return
@@ -143,14 +144,18 @@ class Pipelines(QtWidgets.QWidget):
 
         for op in self.operation_stack:
             if op in self.model_ops:
+                # self.mainwindow.segments.clear()
+                # self.mainwindow.plotter.remove_plots()
                 op_running = self.cgm_model.scgm_run_model(op)
                 self.status_handler(op, op_running)
-                break
+                if op_running:
+                    break
 
             if op in self.export_ops:
                 op_running = self.mainwindow.studio_io_ops.studio_exporter(op, self.cgm_model.current_angles)
                 self.status_handler(op, op_running)
-                break
+                if op_running:
+                    break
 
     def remove_operation(self, operation):
         # this is called from modules when operation is complete (e.g. studio_cgm)
@@ -162,17 +167,22 @@ class Pipelines(QtWidgets.QWidget):
         else:
             self.update_status(op, status='failed')
 
-    def update_status(self, kind, status):
+    def update_status(self, op, status):
         root, child_count = self.get_pipeline_root_child_count()
         for i in range(child_count):
             item = root.child(i)
-            if item.text(0) == kind:
+            if item.text(0) == op:
                 if status == 'running':
+                    self.mainwindow.ui.playOperations.setEnabled(False)
                     item.setIcon(0, QtGui.QIcon("./Resources/Images/running.png"))
                 elif status == 'failed':
+                    self.mainwindow.ui.playOperations.setEnabled(True)
                     item.setIcon(0, QtGui.QIcon("./Resources/Images/failed.png"))
                     self.update_progress_bar(0)
+                    self.remove_operation(op)
+                    self.run_pipelines(from_operation=True)  # move to next operation
                 elif status == 'success':
+                    self.mainwindow.ui.playOperations.setEnabled(True)
                     item.setIcon(0, QtGui.QIcon("./Resources/Images/success.png"))
 
     def clear_pipelines(self):

@@ -1,22 +1,55 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from pyCGM_Single.pycgmIO import loadVSK
 from pyCGM_Single.c3dez import C3DData
-from setup_helper import setup_data_source
-from threads import Worker
+from studioio.setup_helper import setup_data_source
+from core_operations.threads import Worker
 import numpy as np
 import pickle
 from datetime import datetime
 import os
 
 
+def model_bones_gen_pycgm():
+    return ['PELO', 'PELA', 'PELL', 'PELP',  # pelvis
+            "HIPO", "HIPX", "HIPY", "HIPZ",  # hip
+            'RFEO', 'RFEA', 'RFEL', 'RFEP',  # R femur
+            'LFEO', 'LFEA', 'LFEL', 'LFEP',  # L femur
+            'RTIO', 'RTIA', 'RTIL', 'RTIP',  # R tibia
+            'LTIO', 'LTIA', 'LTIL', 'LTIP',  # L tibia
+            'RFOO', 'RFOA', 'RFOL', 'RFOP',  # R foot
+            'LFOO', 'LFOA', 'LFOL', 'LFOP',  # L foot
+            'HEDO', 'HEDA', 'HEDL', 'HEDP',  # head
+            'TRXO', 'TRXA', 'TRXL', 'TRXP',  # thorax
+            'RCLO', 'RCLA', 'RCLL', 'RCLP',  # R clavicle
+            'LCLO', 'LCLA', 'LCLL', 'LCLP',  # L clavicle
+            'RHUO', 'RHUA', 'RHUL', 'RHUP',  # R humerus
+            'LHUO', 'LHUA', 'LHUL', 'LHUP',  # L humerus
+            'RRAO', 'RRAA', 'RRAL', 'RRAP',  # R radius
+            'LRAO', 'LRAA', 'LRAL', 'LRAP',  # L radius
+            'RHNO', 'RHNA', 'RHNL', 'RHNP',  # R hand
+            'LHNO', 'LHNA', 'LHNL', 'LHNP']  # L hand
+
+
 def model_bones_gen():
-    return ['HEDO', 'HEDA', 'HEDL', 'HEDP', 'LCLO', 'LCLA', 'LCLL', 'LCLP', 'LFEO', 'LFEA', 'LFEL', 'LFEP',
-            'LFOO', 'LFOA', 'LFOL', 'LFOP', 'LHNO', 'LHNA', 'LHNL', 'LHNP', 'LHUO', 'LHUA', 'LHUL', 'LHUP',
-            'LRAO', 'LRAA', 'LRAL', 'LRAP', 'LTIO', 'LTIA', 'LTIL', 'LTIP', 'LTOO', 'LTOA', 'LTOL', 'LTOP',
-            'PELO', 'PELA', 'PELL', 'PELP', 'RCLO', 'RCLA', 'RCLL', 'RCLP', 'RFEO', 'RFEA', 'RFEL', 'RFEP',
-            'RFOO', 'RFOA', 'RFOL', 'RFOP', 'RHNO', 'RHNA', 'RHNL', 'RHNP', 'RHUO', 'RHUA', 'RHUL', 'RHUP',
-            'RRAO', 'RRAA', 'RRAL', 'RRAP', 'RTIO', 'RTIA', 'RTIL', 'RTIP', 'RTOO', 'RTOA', 'RTOL', 'RTOP',
-            'TRXO', 'TRXA', 'TRXL', 'TRXP']
+    return ['HEDO', 'HEDA', 'HEDL', 'HEDP',  # head
+            'LCLO', 'LCLA', 'LCLL', 'LCLP',  # L clavicle
+            'RCLO', 'RCLA', 'RCLL', 'RCLP',  # R clavicle
+            'TRXO', 'TRXA', 'TRXL', 'TRXP',  # thorax
+            'LHUO', 'LHUA', 'LHUL', 'LHUP',  # L humerus
+            'RHUO', 'RHUA', 'RHUL', 'RHUP',  # R humerus
+            'LRAO', 'LRAA', 'LRAL', 'LRAP',  # L radius
+            'RRAO', 'RRAA', 'RRAL', 'RRAP',  # R radius
+            'LHNO', 'LHNA', 'LHNL', 'LHNP',  # L hand
+            'RHNO', 'RHNA', 'RHNL', 'RHNP',  # R hand
+            'PELO', 'PELA', 'PELL', 'PELP',  # pelvis
+            'LFEO', 'LFEA', 'LFEL', 'LFEP',  # L femur
+            'RFEO', 'RFEA', 'RFEL', 'RFEP',  # R femur
+            'LTIO', 'LTIA', 'LTIL', 'LTIP',  # L tibia
+            'RTIO', 'RTIA', 'RTIL', 'RTIP',  # R tibia
+            'LFOO', 'LFOA', 'LFOL', 'LFOP',  # L foot
+            'RFOO', 'RFOA', 'RFOL', 'RFOP',  # R foot
+            'LTOO', 'LTOA', 'LTOL', 'LTOP',  # L toe
+            'RTOO', 'RTOA', 'RTOL', 'RTOP']  # R toe
 
 
 def load_c3d(filepath):
@@ -26,7 +59,7 @@ def load_c3d(filepath):
     data.Data['Forces'] : joint forces model outputs
     data.Data['Moments'] : joint moments model outputs
     data.Data['Analogs'] : analog channels
-    data.Data['AllPoints'] : all point data (markers, bones, centreofmass etc.)
+    data.Data['AllPoints'] : all point data (markers, bones, centre of mass etc.)
     data.Data['Markers'] : this contains markers as well as bones
     """
 
@@ -42,6 +75,8 @@ def load_c3d(filepath):
 
     # add dict for model outputs calculated by PyCGM
     data.Data['PyCGM Model Outputs'] = dict()
+    data.Data['pyCGM Bones'] = dict()
+
     return data
 
 
@@ -49,9 +84,28 @@ class StudioIo:
     def __init__(self, mainwindow):
         self.mainwindow = mainwindow
         self.current_filepath = None
+        # when loaded, file will be in saved state until altered
+        self.saved = True
+
+    def save_dialog(self):
+        if not self.saved and self.mainwindow.pycgm_data:
+            quit_msg = "Save data as proj? (c3d not altered)"
+            reply = QtGui.QMessageBox.question(self.mainwindow,
+                                               'Message',
+                                               quit_msg,
+                                               QtGui.QMessageBox.Yes,
+                                               QtGui.QMessageBox.No)
+
+            if reply == QtGui.QMessageBox.Yes:
+                self.save_project()
+            else:
+                pass
 
     def set_current_filepath(self, path):
         self.current_filepath = path
+
+    def get_current_filepath(self):
+        return self.current_filepath
 
     def studio_exporter(self, kind, result):
         if kind == 'Export spreadsheet (.csv)':
@@ -59,8 +113,9 @@ class StudioIo:
 
     def csv_exporter(self, result):
         try:
-            filename, data, delimiter, header, fmt = writeResult(result,
-                                                                 self.current_filepath[:-4])
+            shape = np.shape(result)
+            result = np.reshape(result, (shape[0], shape[1] * shape[2]))
+            filename, data, delimiter, header, fmt = writeResult(result, self.current_filepath[:-4])
         except Exception:
             self.mainwindow.ui.messageBrowser.setText('Could not export file: Try running a model first')
             return 0
@@ -116,9 +171,9 @@ class StudioIo:
                 self.mainwindow.highlighter.markers = None
 
     def c3d_loader(self, path):
+        QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
         self.set_current_filepath(path)
         self.clear_prev_load()
-        QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
         try:
             if self.mainwindow.playing:
                 self.mainwindow.play_state_changed(state='Paused')
@@ -129,14 +184,16 @@ class StudioIo:
             project_path = self.current_filepath[:-3] + 'proj'
             if os.path.isfile(project_path):
                 datapickle = pickle.load(open(project_path, "rb"))
-                latest = max([*datapickle])
+
+                '''latest = max([*datapickle])
                 data.Data = datapickle[latest]['Data']
-                data.Gen = datapickle[latest]['Gen']
+                data.Gen = datapickle[latest]['Gen']'''
+
+                data.Data = datapickle['Data']
+                data.Gen = datapickle['Gen']
 
             self.mainwindow.set_data(data)
-
             setup_data_source(self.mainwindow, self.current_filepath)
-            QtWidgets.QApplication.restoreOverrideCursor()
 
         except Exception:
             self.mainwindow.ui.messageBrowser.setText(
@@ -152,20 +209,36 @@ class StudioIo:
             self.mainwindow.ui.messageBrowser.setText('Could not load VSK')
 
     def save_project(self):
-        try:
-            datapickle = pickle.load(open(self.current_filepath[:-3] + "proj", "rb"))
-            self.dump_pickle(datapickle)
-        except (OSError, IOError) as e:
-            self.dump_pickle()
+        QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+        if self.current_filepath:
+            try:
+                datapickle = {'Data': self.mainwindow.pycgm_data.Data,
+                              'Gen': self.mainwindow.pycgm_data.Gen}
+                pickle.dump(datapickle, open(self.current_filepath[:-3] + "proj", "wb"))
+                self.saved = True
+            except (OSError, IOError):
+                print('failed')
+        QtWidgets.QApplication.restoreOverrideCursor()
 
-    def dump_pickle(self, datapickle=None):
+    def archive_project(self):
+        """todo: option to archive data with a timestamp enabling restoration of previous states"""
+        QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+        if self.current_filepath:
+            try:
+                datapickle = pickle.load(open(self.current_filepath[:-3] + "arch", "rb"))
+                self.dump_pickle(datapickle)
+            except (OSError, IOError):
+                self.dump_pickle()
+        QtWidgets.QApplication.restoreOverrideCursor()
+
+    def archive_pickle(self, datapickle=None):
         datetimestamp = datetime.now()
         if not datapickle:  # first save
             datapickle = dict()
         datapickle[str(datetimestamp)] = {'Data': self.mainwindow.pycgm_data.Data,
                                           'Gen': self.mainwindow.pycgm_data.Gen}
 
-        pickle.dump(datapickle, open(self.current_filepath[:-3] + "proj", "wb"))
+        pickle.dump(datapickle, open(self.current_filepath[:-3] + "arch", "wb"))
 
 
 def writeResult(data, filename, **kargs):
@@ -214,7 +287,7 @@ def writeResult(data, filename, **kargs):
                   "R HANZ", "L HANO", "L HANX", "L HANY", "L HANZ"]
 
     outputAngs = True
-    outputAxis = True
+    outputAxis = False
     dataFilter = None
     delimiter = ","
     filterData = []

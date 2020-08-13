@@ -195,8 +195,8 @@ class Plotter:
         return chans
 
     def plot_sorter(self):
-        # this always handles a list of data series to plot, so need to clear any previous plots
-        self.mainwindow.pyqtgraph2d_widget.clear()
+        # handles a list of data series to plot
+        self.remove_plots()
         self.progress_lines = []
 
         to_plot = [self.get_selected('Force'),

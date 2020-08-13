@@ -1,8 +1,9 @@
 from pyCGM_Single import pycgmStatic, pycgmIO, pycgmCalc, pyCGM
 import numpy as np
 import copy
-from threads import Worker
+from core_operations.threads import Worker
 from pyCGM_Single.pycgmIO import markerKeys
+from studioio.studio_io import model_bones_gen_pycgm
 
 
 class CgmModel:
@@ -14,6 +15,7 @@ class CgmModel:
         self.current_model_kind = None
         self.target_markers = markerKeys()
         self.current_angles = None
+        self.current_axes = None
 
     def set_current_array(self):
         marker_keys = self.mainwindow.pycgm_data.Data['Markers']
@@ -46,19 +48,20 @@ class CgmModel:
             joints.append(jcs)
             progress_callback.emit((ind + 1) * 100 / length)
 
-        # in pycgm module
+        # Overridden in pycgm module
         def calc(a, b, c, d):
             return angles, joints
 
         pycgmCalc.Calc = calc
 
-        angles = pycgmCalc.calcAngles(inarray,
-                                      vsk=calibrated_measurements,
-                                      splitAnglesAxis=False,
-                                      formatData=False)
+        angles, axes = pycgmCalc.calcAngles(inarray,
+                                            vsk=calibrated_measurements,
+                                            splitAnglesAxis=True,
+                                            formatData=True,
+                                            axis=True)
 
-        self.update_pycgm_data(angles)
         self.set_current_angles(angles)
+        self.set_current_axes(axes)
 
     def run_static(self):
         self.current_model_kind = 'Static cgm pipeline'  # used to update status of run
@@ -108,35 +111,54 @@ class CgmModel:
         return 1  # thread is running
 
     def thread_complete(self):
+        self.mainwindow.studio_io_ops.saved = False  # keep track of whether save is needed on exit
         self.mainwindow.pipelines.update_status(self.current_model_kind, status='success')
         self.mainwindow.pipelines.remove_operation(self.current_model_kind)
+        # clear old segments and plots
+        self.mainwindow.segments.clear()
+        self.mainwindow.plotter.remove_plots()
+        self.update_pycgm_angles(self.current_angles)
+        self.update_pycgm_bones(self.current_axes)
+        # run next operation
         self.mainwindow.pipelines.run_pipelines(from_operation=True)
 
     def thread_failed(self, intuple):
         # called by worker thread if something goes wrong
         self.mainwindow.pipelines.update_status(self.current_model_kind, status='failed')
         self.set_current_angles(None)
+        self.set_current_axes(None)
 
-    def update_pycgm_data(self, angles):
-        angles_tup = ('Pelvis,RHip,LHip,RKnee,LKnee,RAnkle,LAnkle,'
-                      'RFootProgress,LFootProgress,Head,Thorax,Neck,Spine,'
-                      'RShoulder,LShoulder,RElbow,LElbow,RWrist,LWrist')
+    def update_pycgm_bones(self, axes):
+        axes_list = model_bones_gen_pycgm()
+        try:
+            shape = np.shape(axes)
+            count = 0
+            for i in range(shape[1]):
+                for j in range(shape[2]):
+                    self.mainwindow.pycgm_data.Data['pyCGM Bones'][axes_list[count]] = axes[:, i, j].T
+                    count += 1
+            self.mainwindow.segments.set_segment_data(pycgm=True)
+            self.mainwindow.segments.update_segments()
+            self.mainwindow.emitter.emit('current')  # will need to render to show segments
+        except Exception as err:
+            print(err)
+
+    def update_pycgm_angles(self, angles):
+        angles_tup = ('PelvisAngles,RHipAngles,LHipAngles,RKneeAngles,LKneeAngles,RAnkleAngles,LAnkleAngles,'
+                      'RFootProgressAngles,LFootProgressAngles,HeadAngles,ThoraxAngles,NeckAngles,SpineAngles,'
+                      'RShoulderAngles,LShoulderAngles,RElbowAngles,LElbowAngles,RWristAngles,LWristAngles')
         angles_list = angles_tup.split(',')
-        angles = np.transpose(angles)
-
-        # 19 angles, 57 columns (x, y, z)
-        for i in range(0, 20):
-            threes = i * 3
-            z = threes - 1
-            x = z - 2
-            y = z - 1
-            self.mainwindow.pycgm_data.Data['PyCGM Model Outputs'][angles_list[i - 1]] = \
-                np.asarray([angles[x],
-                            angles[y],
-                            angles[z]])
+        try:
+            for i in range(np.shape(angles)[1]):
+                self.mainwindow.pycgm_data.Data['PyCGM Model Outputs'][angles_list[i]] = angles[:, i].T
+        except Exception as err:
+            print(err)
 
         self.mainwindow.plotter.update_channels()
         self.mainwindow.explorer_widget.update_cgm_model_outputs()
 
     def set_current_angles(self, angles):
         self.current_angles = angles
+
+    def set_current_axes(self, axes):
+        self.current_axes = axes

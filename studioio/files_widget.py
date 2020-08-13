@@ -4,62 +4,13 @@ from functools import partial
 from xml.dom import minidom
 
 
-# store directories so we can share with IconProvider
-global patient_dirs
-global session_dirs
-global trials
-global c3ds
-global vsks
-
-patient_dirs = list()
-session_dirs = list()
-trials = list()
-c3ds = list()
-vsks = list()
-
-
-def update_all(path):
-    global patient_dirs
-    global session_dirs
-    global trials
-    global vsks
-
-    patient_dirs = list()
-    session_dirs = list()
-    trials = list()
-    vsks = list()
-
-    # this finds all Vicon files and assigns icons
-    for current_dir, dirnames, filenames in os.walk(path):
-        current_dir = current_dir.replace(os.sep, '/')
-        for filename in filenames:
-            ext = filename[-3:]
-            if filename[-11:-4] == 'Patient':
-                if current_dir not in patient_dirs:
-                    patient_dirs.append(current_dir)
-
-            elif filename[-11:-4] == 'Session':
-                if current_dir not in session_dirs:
-                    session_dirs.append(current_dir)
-
-            elif ext == 'c3d':
-                trial_name = current_dir + '/' + filename
-                if trial_name not in trials:
-                    trials.append(trial_name)
-
-            elif ext == 'vsk':
-                vsk_name = current_dir + '/' + filename
-                if vsk_name not in vsks:
-                    vsks.append(vsk_name)
-
-
 class IconProvider(QtWidgets.QFileIconProvider):
     def icon(self, file_info):
         if file_info.isDir():
             path = file_info.absoluteFilePath()
-            if path in patient_dirs:
+            if path in self.patient_dirs:
                 return QtGui.QIcon("./Resources/Images/patientball.png")
-            if path in session_dirs:
+            if path in self.session_dirs:
                 return QtGui.QIcon("./Resources/Images/sessionball.png")
 
         if file_info.isFile():
@@ -67,9 +18,9 @@ class IconProvider(QtWidgets.QFileIconProvider):
             file_base = file_info.completeBaseName()
             file_ext = file_info.suffix()
             file_name = file_dir + "/" + file_base + '.' + file_ext
-            if file_name in trials:
+            if file_name in self.trials:
                 return QtGui.QIcon("./Resources/Images/trialball.png")
-            elif file_name in vsks:
+            elif file_name in self.vsks:
                 return QtGui.QIcon("./Resources/Images/vskball.png")
 
         return QtWidgets.QFileIconProvider.icon(self, file_info)
@@ -96,20 +47,30 @@ class Files:
 
         # file browser model tree
         # self.path = ''
-        self.path = 'C:/Users/M.Hollands/Desktop/Example_c3d/example/example'
+        # self.path = 'C:/Users/M.Hollands/Desktop/'
+        self.path = 'C:/Users/M.Hollands/Desktop/'
         # self.path = "C:/Users/M.Hollands/Desktop/pyCGM-master/SampleData/Sample_2"
         # self.path = QtCore.QDir.currentPath()
         # self.path = "C:/Users/M.Hollands/Desktop/Dunhill project/Decor/Decor_staircase_Vicon_Processed/"
-
         self.model = QtWidgets.QFileSystemModel()
         self.model.setRootPath(self.path)
-        self.model.setIconProvider(IconProvider())
-
+        self.current_dir = None
+        icon_provider = IconProvider()
+        self.patient_dirs = list()
+        self.session_dirs = list()
+        self.trials = list()
+        self.vsks = list()
+        icon_provider.patient_dirs = self.patient_dirs
+        icon_provider.session_dirs = self.session_dirs
+        icon_provider.trials = self.trials
+        icon_provider.vsks = self.vsks
+        self.model.setIconProvider(icon_provider)
         self.tree = QtWidgets.QTreeView()
         self.tree.setModel(self.model)
         self.tree.setRootIndex(self.model.index(self.path))
         self.tree.clicked.connect(partial(self.tree_clicked, 'single'))
         self.tree.doubleClicked.connect(partial(self.tree_clicked, 'double'))
+        self.tree.expanded.connect(partial(self.tree_clicked, 'single'))
         self.tree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         self.tree.header().setStyleSheet(header_style)
 
@@ -139,17 +100,90 @@ class Files:
         self.mainwindow.ui.filesLayout.addWidget(splitter)
         splitter.setCollapsible(0, False)
         splitter.setCollapsible(1, False)
+        self.exts = ['c3d', 'vsk']
+        self.update_all(self.path)
 
-        update_all(self.path)
+    def set_current_path(self, path):
+        self.current_dir = path
+
+    def save_state(self):
+        return self.current_dir
+
+    def load_state(self, filepath):
+        try:
+            self.tree.setCurrentIndex(self.model.index(filepath))
+        except:  # if file structure is altered revert to root
+            pass
+
+    def update_all(self, path):
+        # this finds all Vicon files and assigns icons
+        dir_no = 0  # only explore 50 directories deep
+        for current_dir, dirnames, filenames in os.walk(path):
+            if dir_no > 50:
+                break
+            current_dir = current_dir.replace(os.sep, '/')
+            for filename in filenames:
+                ext = filename[-3:]
+                if filename[-11:-4] == 'Patient':
+                    if current_dir not in self.patient_dirs:
+                        self.patient_dirs.append(current_dir)
+
+                elif filename[-11:-4] == 'Session':
+                    if current_dir not in self.session_dirs:
+                        self.session_dirs.append(current_dir)
+
+                elif ext == 'c3d':
+                    trial_name = current_dir + '/' + filename
+                    if trial_name not in self.trials:
+                        self.trials.append(trial_name)
+
+                elif ext == 'vsk':
+                    vsk_name = current_dir + '/' + filename
+                    if vsk_name not in self.vsks:
+                        self.vsks.append(vsk_name)
+            dir_no += 1
+
+    def tree_clicked(self, kind, signal):
+        # receives signal on treeview clicked
+        path = self.model.filePath(signal)
+        self.set_current_path(path)
+        self.update_all(path)
+
+        if kind == 'double':  # load directly from file tree view
+            ext = path[-3:]
+            if ext in self.exts:
+                # check we need to save prior to loading new file
+                self.mainwindow.studio_io_ops.save_dialog()
+                self.mainwindow.studio_io_ops.studio_loader(path)
+
+        if kind == 'single':  # transfer dir table
+            if path in self.patient_dirs:
+                self.update_sessions(path)
+            elif path in self.session_dirs:
+                self.update_trials(path)
+
+    def table_clicked(self, kind, signal):
+        target_row = signal.row()
+        path_item = self.files_table.item(target_row, 4)
+        if path_item:
+            path = path_item.text()
+            self.set_current_path(path)
+            if kind == 'double':  # load c3d
+                self.mainwindow.studio_io_ops.save_dialog()
+                self.mainwindow.studio_io_ops.studio_loader(path)
+
+            elif kind == 'single':  # open session
+                if path in self.session_dirs:
+                    self.update_trials(path)
 
     def update_trials(self, path):
-        # populates tableview with trials and icons once a tree item (session) is clicked
+        # populates table with all trials in session directory once a tree item (session) is clicked
         self.files_table.setRowCount(0)
         for current_dir, dirnames, filenames in os.walk(path):
             current_dir = current_dir.replace(os.sep, '/')
             for filename in filenames:
                 ext = filename[-3:]
-                if ext == 'c3d' or ext == 'vsk':
+                if ext in self.exts:
                     name = filename[:-4]
                     self.files_table.insertRow(self.files_table.rowCount())
                     item = QtWidgets.QTableWidgetItem(name)
@@ -195,27 +229,3 @@ class Files:
                                              QtWidgets.QTableWidgetItem(current_dir))
 
         self.files_table.resizeColumnToContents(0)
-
-    def tree_clicked(self, kind, signal):
-        # receives signal on treeview clicked
-        path = self.model.filePath(signal)
-        if kind == 'double':
-            self.mainwindow.studio_io_ops.studio_loader(path)
-
-        elif kind == 'single':
-            if path in patient_dirs:
-                self.update_sessions(path)
-            elif path in session_dirs:
-                self.update_trials(path)
-
-    def table_clicked(self, kind, signal):
-        target_row = signal.row()
-        path_item = self.files_table.item(target_row, 4)
-        if path_item:
-            path = path_item.text()
-            if kind == 'double':
-                self.mainwindow.studio_io_ops.studio_loader(path)
-
-            elif kind == 'single':
-                if path in session_dirs:
-                    self.update_trials(path)
