@@ -9,9 +9,9 @@ class IconProvider(QtWidgets.QFileIconProvider):
         if file_info.isDir():
             path = file_info.absoluteFilePath()
             if path in self.patient_dirs:
-                return QtGui.QIcon("./Resources/Images/patientball.png")
+                return QtGui.QIcon(":images/patientball.png")
             if path in self.session_dirs:
-                return QtGui.QIcon("./Resources/Images/sessionball.png")
+                return QtGui.QIcon(":images/sessionball.png")
 
         if file_info.isFile():
             file_dir = file_info.absolutePath()
@@ -19,9 +19,9 @@ class IconProvider(QtWidgets.QFileIconProvider):
             file_ext = file_info.suffix()
             file_name = file_dir + "/" + file_base + '.' + file_ext
             if file_name in self.trials:
-                return QtGui.QIcon("./Resources/Images/trialball.png")
+                return QtGui.QIcon(":images/trialball.png")
             elif file_name in self.vsks:
-                return QtGui.QIcon("./Resources/Images/vskball.png")
+                return QtGui.QIcon(":images/vskball.png")
 
         return QtWidgets.QFileIconProvider.icon(self, file_info)
 
@@ -56,6 +56,7 @@ class Files:
         self.model.setRootPath(self.path)
         self.current_dir = None
         icon_provider = IconProvider()
+        icon_provider.mainwindow = self.mainwindow
         self.patient_dirs = list()
         self.session_dirs = list()
         self.trials = list()
@@ -188,9 +189,9 @@ class Files:
                     self.files_table.insertRow(self.files_table.rowCount())
                     item = QtWidgets.QTableWidgetItem(name)
                     if ext == 'c3d':
-                        icon = QtGui.QIcon("./Resources/Images/trialball.png")
+                        icon = QtGui.QIcon(":images/trialball.png")
                     else:
-                        icon = QtGui.QIcon("./Resources/Images/vskball.png")
+                        icon = QtGui.QIcon(":images/vskball.png")
                     item.setIcon(icon)
                     self.files_table.setItem(self.files_table.rowCount() - 1, 0, item)
                     self.files_table.setItem(self.files_table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(ext))
@@ -222,7 +223,7 @@ class Files:
                 if filename[-11:-4] == 'Session':
                     self.files_table.insertRow(self.files_table.rowCount())
                     item = QtWidgets.QTableWidgetItem(filename[:-12])
-                    icon = QtGui.QIcon("./Resources/Images/sessionball.png")
+                    icon = QtGui.QIcon(":images/sessionball.png")
                     item.setIcon(icon)
                     self.files_table.setItem(self.files_table.rowCount() - 1, 0, item)
                     self.files_table.setItem(self.files_table.rowCount() - 1, 4,

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'gui/gui.ui'
+# Form implementation generated from reading ui file 'C:\Users\M.Hollands\PycharmProjects\pyCGM_Studio\ui\gui.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -619,3 +619,4 @@ class Ui_mainWindow(object):
         self.actionOpen.setText(_translate("mainWindow", "Load motion capture"))
         self.actionRunModel.setText(_translate("mainWindow", "Run model"))
 
+import resources_rc

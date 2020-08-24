@@ -1,6 +1,6 @@
 import vtk
 from PyQt5.QtCore import Qt
-from core_operations import utilities as ut
+from core import utilities as ut
 import numpy as np
 
 

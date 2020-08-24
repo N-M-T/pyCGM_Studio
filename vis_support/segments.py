@@ -1,6 +1,6 @@
 import vtk
 import numpy as np
-from core_operations import utilities as ut
+from core import utilities as ut
 
 
 def request_pycgm_segment(key, segment, coords):

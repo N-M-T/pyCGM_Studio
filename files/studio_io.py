@@ -1,8 +1,8 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from pyCGM_Single.pycgmIO import loadVSK
 from pyCGM_Single.c3dez import C3DData
-from studioio.setup_helper import setup_data_source
-from core_operations.threads import Worker
+from files.setup_helper import setup_data_source
+from core.threads import Worker
 import numpy as np
 import pickle
 from datetime import datetime
@@ -86,6 +86,7 @@ class StudioIo:
         self.current_filepath = None
         # when loaded, file will be in saved state until altered
         self.saved = True
+        self.export_worker = None
 
     def save_dialog(self):
         if not self.saved and self.mainwindow.pycgm_data:
@@ -124,26 +125,28 @@ class StudioIo:
             return self.gen_worker(filename, data, delimiter, header, fmt)  # we will start thread
 
     def gen_worker(self, filename, data, delimiter, header, fmt):
-        worker = Worker(savetxt,
-                        filename,
-                        data,
-                        delimiter=delimiter,
-                        header=header,
-                        fmt=fmt)
+        self.export_worker = Worker(savetxt,
+                                    filename,
+                                    data,
+                                    delimiter=delimiter,
+                                    header=header,
+                                    fmt=fmt)
 
-        worker.signals.finished.connect(self.thread_complete)
-        worker.signals.progress.connect(self.mainwindow.pipelines.update_progress_bar)
-        worker.signals.error.connect(self.thread_failed)
-        worker.start()
+        self.export_worker.signals.finished.connect(self.thread_complete)
+        self.export_worker.signals.progress.connect(self.mainwindow.pipelines.update_progress_bar)
+        self.export_worker.signals.error.connect(self.thread_failed)
+        self.export_worker.start()
         return 1
 
     def thread_complete(self):
         self.mainwindow.pipelines.update_status('Export spreadsheet (.csv)', status='success')
         self.mainwindow.pipelines.remove_operation('Export spreadsheet (.csv)')
         self.mainwindow.pipelines.run_pipelines(from_operation=True)
+        self.export_worker = None
 
     def thread_failed(self):
         self.mainwindow.pipelines.update_status('Export spreadsheet (.csv)', status='failed')
+        self.export_worker = None
 
     def studio_loader(self, path):
         ext = path[-3:]
@@ -427,7 +430,7 @@ def savetxt(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
     if isinstance(fname, os_PathLike):
         fname = os_fspath(fname)
     if isinstance(fname, str):
-        # datasource doesn't support creating a new file ...
+        # datasource doesn't vis_support creating a new file ...
         open(fname, 'wt').close()
         fh = np.lib._datasource.open(fname, 'wt', encoding=encoding)
         own_fh = True

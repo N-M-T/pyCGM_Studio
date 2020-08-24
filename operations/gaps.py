@@ -1,9 +1,9 @@
 import vtk
-from core_operations import utilities as ut
+from core import utilities as ut
 import numpy as np
-from vis_cgm.trajectories import traj_gen
+from vis_support.trajectories import traj_gen
 from PyQt5 import QtWidgets, QtGui, QtCore
-from core_operations.spline_updater import UpdateIndices
+from core.spline_updater import UpdateIndices
 from functools import partial
 
 
@@ -170,10 +170,10 @@ class Gaps(object):
     def show_gap_filling(self):
         if not self.mainwindow.ui.gapFillWidget.isVisible():
             self.mainwindow.ui.gapFillWidget.setVisible(True)
-            self.mainwindow.ui.gapFillToolButton.setIcon(QtGui.QIcon("./Resources/Images/uparrow.png"))
+            self.mainwindow.ui.gapFillToolButton.setIcon(QtGui.QIcon("./resources/images/uparrow.png"))
         else:
             self.mainwindow.ui.gapFillWidget.setVisible(False)
-            self.mainwindow.ui.gapFillToolButton.setIcon(QtGui.QIcon("./Resources/Images/downarrow.png"))
+            self.mainwindow.ui.gapFillToolButton.setIcon(QtGui.QIcon("./resources/images/downarrow.png"))
 
     def find_gaps(self):
         for mrker, val in self.mainwindow.pycgm_data.Data['Markers'].items():

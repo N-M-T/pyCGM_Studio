@@ -1,9 +1,9 @@
 from pyCGM_Single import pycgmStatic, pycgmIO, pycgmCalc, pyCGM
 import numpy as np
 import copy
-from core_operations.threads import Worker
+from core.threads import Worker
 from pyCGM_Single.pycgmIO import markerKeys
-from studioio.studio_io import model_bones_gen_pycgm
+from files.studio_io import model_bones_gen_pycgm
 
 
 class CgmModel:
@@ -16,6 +16,9 @@ class CgmModel:
         self.target_markers = markerKeys()
         self.current_angles = None
         self.current_axes = None
+        # gets garbage collected with PyInstaller but not when run with standard python
+        # interpreter, so keep a reference here
+        self.model_worker = None
 
     def set_current_array(self):
         marker_keys = self.mainwindow.pycgm_data.Data['Markers']
@@ -23,7 +26,7 @@ class CgmModel:
         # ensure all necessary markers are present and labelled correctly
         if not all(item in marker_keys for item in self.target_markers):
             if self.current_array:
-                # ensure we remove old array so non associated operations cannot be performed
+                # ensure we remove old array so non associated vis_support cannot be performed
                 self.current_array = None
             return 0
 
@@ -101,13 +104,18 @@ class CgmModel:
 
     def gen_model_worker(self):
         # calcFrames() is time consuming so run in separate thread and update progress bar
-        model_worker = Worker(self.calc_frames,
-                              inarray=self.current_array,
-                              calibrated_measurements=self.calibrated_measurements)
-        model_worker.signals.finished.connect(self.thread_complete)
-        model_worker.signals.progress.connect(self.mainwindow.pipelines.update_progress_bar)
-        model_worker.signals.error.connect(self.thread_failed)
-        model_worker.start()
+        try:
+            self.model_worker = Worker(self.calc_frames,
+                                       inarray=self.current_array,
+                                       calibrated_measurements=self.calibrated_measurements)
+            self.model_worker.signals.finished.connect(self.thread_complete)
+            self.model_worker.signals.progress.connect(self.mainwindow.pipelines.update_progress_bar)
+            self.model_worker.signals.error.connect(self.thread_failed)
+            self.model_worker.start()
+        except Exception as err:
+            print('threading: ', err)
+            print('enter to exit')
+            input()
         return 1  # thread is running
 
     def thread_complete(self):
@@ -127,6 +135,7 @@ class CgmModel:
         self.mainwindow.pipelines.update_status(self.current_model_kind, status='failed')
         self.set_current_angles(None)
         self.set_current_axes(None)
+        self.model_worker = None
 
     def update_pycgm_bones(self, axes):
         axes_list = model_bones_gen_pycgm()

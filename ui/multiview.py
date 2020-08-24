@@ -1,16 +1,14 @@
 from PyQt5 import QtWidgets, QtCore
-from gui.sub_windows import SubWindow
+from ui.sub_windows import SubWindow
 
 
 class MultiView:
-    def __init__(self, ui, vtk3d_widget, pyqtgraph2d_widget):  # vtk2d_widget):
+    def __init__(self, ui, vtk3d_widget, pyqtgraph2d_widget):
         self.ui = ui
         self.vtk3d_widget = vtk3d_widget
-        # self.vtk2d_widget = vtk2d_widget
         self.pyqtgraph2d_widget = pyqtgraph2d_widget
 
         self.sub_window = SubWindow(widget=self.vtk3d_widget, kind='main')
-        # self.plot_window = gen_sub(widget=vtk2d_widget, kind='plot')
         self.plot_window = SubWindow(widget=self.pyqtgraph2d_widget, kind='plot')
 
         self.sub_window.custom_bar.handle_split = self.handle_split

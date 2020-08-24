@@ -3,7 +3,7 @@ from vis_support.QVTKRenderWindowInteractorMod import QVTKRenderWindowInteractor
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from vis_support.pycgm_interactor_styles import PycgmTrackballStyle, PycgmDragActorStyle
 from PyQt5 import QtWidgets
-from vis_cgm.floorplane import build_plane
+from vis_support.floorplane import build_plane
 
 
 class VTK2d(QtWidgets.QFrame):

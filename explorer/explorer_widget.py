@@ -47,7 +47,7 @@ class ExplorerWidget:
         # markers
         markers_name = "Markers [" + str(self.mainwindow.pycgm_data.Gen['Vid_SampRate']) + "Hz]"
         marker_layer = QtWidgets.QTreeWidgetItem([markers_name])
-        marker_layer.setIcon(0, QtGui.QIcon("./Resources/Images/markerballs.png"))
+        marker_layer.setIcon(0, QtGui.QIcon(":images/markerballs.png"))
         self.mainwindow.ui.explorerTree.addTopLevelItem(marker_layer)
 
         # analog channels
@@ -57,19 +57,19 @@ class ExplorerWidget:
         else:
             devices_name = "Devices"
         analog_layer = QtWidgets.QTreeWidgetItem([devices_name])
-        analog_layer.setIcon(0, QtGui.QIcon("./Resources/Images/devices.png"))
+        analog_layer.setIcon(0, QtGui.QIcon(":images/devices.png"))
         self.mainwindow.ui.explorerTree.addTopLevelItem(analog_layer)
 
         # model outputs
         model_layer = QtWidgets.QTreeWidgetItem(["Manufacturer Model Outputs"])
-        model_layer.setIcon(0, QtGui.QIcon("./Resources/Images/models.png"))
+        model_layer.setIcon(0, QtGui.QIcon(":images/models.png"))
         self.mainwindow.ui.explorerTree.addTopLevelItem(model_layer)
 
         # add marker source
         for marker in [*self.mainwindow.pycgm_data.Data['Markers']]:
             if marker[0] != '*':
                 marker_child = QtWidgets.QTreeWidgetItem([marker])
-                marker_child.setIcon(0, QtGui.QIcon("./Resources/Images/shinyball.png"))
+                marker_child.setIcon(0, QtGui.QIcon(":images/shinyball.png"))
                 marker_layer.addChild(marker_child)
 
         # add analog source
@@ -94,15 +94,15 @@ class ExplorerWidget:
                 fp_name = "#" + str(fp_count) + " Force platform"
 
                 analog_child = QtWidgets.QTreeWidgetItem([fp_name])
-                analog_child.setIcon(0, QtGui.QIcon("./Resources/Images/play.png"))
+                analog_child.setIcon(0, QtGui.QIcon(":images/play.png"))
                 analog_layer.addChild(analog_child)
 
                 force_child = QtWidgets.QTreeWidgetItem(["Force"])
-                force_child.setIcon(0, QtGui.QIcon("./Resources/Images/subplay.png"))
+                force_child.setIcon(0, QtGui.QIcon(":images/subplay.png"))
                 moment_child = QtWidgets.QTreeWidgetItem(["Moment"])
-                moment_child.setIcon(0, QtGui.QIcon("./Resources/Images/subplay.png"))
+                moment_child.setIcon(0, QtGui.QIcon(":images/subplay.png"))
                 cop_child = QtWidgets.QTreeWidgetItem(["CoP"])
-                cop_child.setIcon(0, QtGui.QIcon("./Resources/Images/subplay.png"))
+                cop_child.setIcon(0, QtGui.QIcon(":images/subplay.png"))
 
                 analog_child.addChild(force_child)
                 analog_child.addChild(moment_child)
@@ -110,15 +110,15 @@ class ExplorerWidget:
 
                 for f_targ, m_targ, c_targ in zip(force_targets, moment_targets, cop_targets):
                     f_child = QtWidgets.QTreeWidgetItem([f_targ])
-                    f_child.setIcon(0, QtGui.QIcon("./Resources/Images/subsubplay.png"))
+                    f_child.setIcon(0, QtGui.QIcon(":images/subsubplay.png"))
                     force_child.addChild(f_child)
 
                     m_child = QtWidgets.QTreeWidgetItem([m_targ])
-                    m_child.setIcon(0, QtGui.QIcon("./Resources/Images/subsubplay.png"))
+                    m_child.setIcon(0, QtGui.QIcon(":images/subsubplay.png"))
                     moment_child.addChild(m_child)
 
                     cp = QtWidgets.QTreeWidgetItem([c_targ])
-                    cp.setIcon(0, QtGui.QIcon("./Resources/Images/subsubplay.png"))
+                    cp.setIcon(0, QtGui.QIcon(":images/subsubplay.png"))
                     cop_child.addChild(cp)
 
                 fp_count += 1
@@ -126,13 +126,13 @@ class ExplorerWidget:
         # display other analog channels
         if len([*self.mainwindow.pycgm_data.Data['Analogs']]) > 0:
             analog_child = QtWidgets.QTreeWidgetItem(["Analog channels"])
-            analog_child.setIcon(0, QtGui.QIcon("./Resources/Images/play.png"))
+            analog_child.setIcon(0, QtGui.QIcon(":images/play.png"))
             analog_layer.addChild(analog_child)
 
             ch_count = 1
             for analog in [*self.mainwindow.pycgm_data.Data['Analogs']]:
                 raw_child = QtWidgets.QTreeWidgetItem([analog])
-                raw_child.setIcon(0, QtGui.QIcon("./Resources/Images/subsubplay.png"))
+                raw_child.setIcon(0, QtGui.QIcon(":images/subsubplay.png"))
                 analog_child.addChild(raw_child)
                 ch_count += 1
 
@@ -143,12 +143,12 @@ class ExplorerWidget:
         for output in outputs:
             if output in [*self.mainwindow.pycgm_data.Data] and len(self.mainwindow.pycgm_data.Data[output]) > 0:
                 output_child = QtWidgets.QTreeWidgetItem([output])
-                output_child.setIcon(0, QtGui.QIcon("./Resources/Images/modelchild1.png"))
+                output_child.setIcon(0, QtGui.QIcon(":images/modelchild1.png"))
                 model_layer.addChild(output_child)
 
                 for variable in [*self.mainwindow.pycgm_data.Data[output]]:
                     output_child2 = QtWidgets.QTreeWidgetItem([variable])
-                    output_child2.setIcon(0, QtGui.QIcon("./Resources/Images/modelchild2.png"))
+                    output_child2.setIcon(0, QtGui.QIcon(":images/modelchild2.png"))
                     output_child.addChild(output_child2)
 
         self.update_cgm_model_outputs()
@@ -165,14 +165,14 @@ class ExplorerWidget:
                 del to_delete
 
         pycgm_model_layer = QtWidgets.QTreeWidgetItem(['PyCGM Model Outputs'])
-        pycgm_model_layer.setIcon(0, QtGui.QIcon("./Resources/Images/models.png"))
+        pycgm_model_layer.setIcon(0, QtGui.QIcon(":images/models.png"))
         if len([*self.mainwindow.pycgm_data.Data['PyCGM Model Outputs']]) > 0:
             pycgm_model_layer.setChildIndicatorPolicy(QtWidgets.QTreeWidgetItem.ShowIndicator)
         self.mainwindow.ui.explorerTree.addTopLevelItem(pycgm_model_layer)
 
         for variable in [*self.mainwindow.pycgm_data.Data['PyCGM Model Outputs']]:
             output_child = QtWidgets.QTreeWidgetItem([variable])
-            output_child.setIcon(0, QtGui.QIcon("./Resources/Images/modelchild2.png"))
+            output_child.setIcon(0, QtGui.QIcon(":images/modelchild2.png"))
             pycgm_model_layer.addChild(output_child)
 
     def explorer_selected(self, selected, deselected):

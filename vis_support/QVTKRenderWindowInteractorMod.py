@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 
 class QVTKRenderWindowInteractorMod(QVTKRenderWindowInteractor):
     """
-    From what I could find, vtkInteractorStyleTrackballCamera didn't support left and right
+    From what I could find, vtkInteractorStyleTrackballCamera didn't vis_support left and right
     mouse click (17.04.20), which I wanted for panning. So I hacked my own method, but it needed a private
     attribute from the interactor: _ActiveButton to be modified on mouse release, which is a
     QtButtonEvent. So this class inherits the QVTKRenderWindowInteractor and overrides the

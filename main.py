@@ -1,26 +1,27 @@
 from PyQt5 import QtWidgets, QtCore, QtGui, uic
 import sys
 import os
-from gui.gui import Ui_mainWindow
+from ui.gui import Ui_mainWindow
 from vis_support.vtkWidgets import VTK3d
 from vis_support.highlighter import Highlighter
 from vis_support.picker import Picker
 from vis_support.player_handler import Player
 from vis_support.emitter import Emitter
-from acquisition_explorer.explorer_widget import ExplorerWidget
-from gui.multiview import MultiView
+from explorer.explorer_widget import ExplorerWidget
+from ui.multiview import MultiView
 from vis_support.plotter import Plotter
-from cgm_operations.gaps import Gaps
+from operations.gaps import Gaps
 from vis_support.pycgm_interactor_styles import ChangeStyles
-from core_operations.history import Handler, SaveSplineCommand, GapReceiver
-from studioio.files_widget import Files
-from cgm_operations.pipelines import Pipelines
-from studioio.studio_io import StudioIo
+from core.history import Handler, SaveSplineCommand, GapReceiver
+from files.files_widget import Files
+from operations.pipelines import Pipelines
+from files.studio_io import StudioIo
 from vis_support.plotter import GraphicsLayoutWidget
-from vis_cgm.force_platforms import ForcePlatforms
-from vis_cgm.trajectories import Trajectories
-from vis_cgm.segments import Segments
-from vis_cgm.vtk_title import VtkTitle
+from vis_support.force_platforms import ForcePlatforms
+from vis_support.trajectories import Trajectories
+from vis_support.segments import Segments
+from files.vtk_title import VtkTitle
+import resources_rc
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -33,7 +34,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.markers = None
         self.vsk = None
 
-        from gui import gui
+        print("Starting PyCGM Studio")
+
+        from ui import gui
         self.ui = gui.Ui_mainWindow()
         self.ui.setupUi(self)
 
@@ -84,7 +87,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # setup toolbar
         toolbar = self.addToolBar("File")
-        save = QtWidgets.QAction(QtGui.QIcon("./Resources/Images/save.png"), "save", self)
+        # save = QtWidgets.QAction(QtGui.QIcon(self.current_dir + "/resources/images/save.png"), "save", self)
+        save = QtWidgets.QAction(QtGui.QIcon(":images/save.png"), "save", self)
         toolbar.addAction(save)
         toolbar.actionTriggered.connect(self.studio_io_ops.save_project)
 
@@ -139,21 +143,36 @@ class MainWindow(QtWidgets.QMainWindow):
             self.files.load_state(last_dir)
 
 
+def userinput():
+    print('Press enter to exit')
+    input()
+
+
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(__file__))
+    try:
+        '''if getattr(sys, 'frozen', False):
+            application_path = os.path.dirname(sys.executable)
+            base_dir, end = os.path.split(application_path)
+            ui_path = base_dir + '/ui/gui'
+        else:
+            application_path = os.path.dirname(__file__)
+            ui_path = 'ui/gui'
 
-    # recompile ui
-    with open("gui/gui.ui") as ui_file:
-        with open("gui/gui.py", "w") as py_ui_file:
-            uic.compileUi(ui_file, py_ui_file)
+        with open(ui_path + '.ui') as ui_file:
+            with open(ui_path + '.py', "w") as py_ui_file:
+                uic.compileUi(ui_file, py_ui_file)'''
 
-    app = QtCore.QCoreApplication.instance()
-    if app is None:
-        app = QtWidgets.QApplication(sys.argv)
-        app.setOrganizationDomain('ltd')
-        app.setOrganizationName('alg')
+        app = QtCore.QCoreApplication.instance()
+        if app is None:
+            app = QtWidgets.QApplication(sys.argv)
+            app.setOrganizationDomain('ltd')
+            app.setOrganizationName('alg')
 
-    mainWindow = MainWindow()
-    mainWindow.show()
-    # mainWindow.showMaximized() #turned off for development
-    app.exec_()
+        mainWindow = MainWindow()
+        mainWindow.show()
+        app.exec_()
+
+    except Exception as err:
+        print(err)
+        userinput()
+

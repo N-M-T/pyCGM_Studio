@@ -1,6 +1,6 @@
 import numpy as np
-from vis_cgm.markers import Markers
-from core_operations.truncated import is_truncated
+from vis_support.markers import Markers
+from core.truncated import is_truncated
 
 
 def setup_data_source(mainwindow, filename):
@@ -29,7 +29,7 @@ def setup_data_source(mainwindow, filename):
         mainwindow.gaps.find_gaps()
         mainwindow.gaps.populate_gap_table()
 
-        # pass pycgm and gap dict to Receiver for undo/redo operations
+        # pass pycgm and gap dict to Receiver for undo/redo vis_support
         mainwindow.gap_receiver.update_marker_data_source = markers.update_data
 
     # check for bones
@@ -49,7 +49,7 @@ def setup_data_source(mainwindow, filename):
     # explorer widget
     mainwindow.explorer_widget.populate_tree()
 
-    # pipelines source
+    # operations source
     mainwindow.pipelines.clear_pipelines()
     mainwindow.pipelines.cgm_model.set_current_angles(None)
 
