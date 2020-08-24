@@ -1,0 +1,25 @@
+<RCC>
+  <qresource prefix="images">
+    <file>close.png</file>
+    <file>devices.png</file>
+    <file>divisionhorizontal.png</file>
+    <file>downarrow.png</file>
+    <file>failed.png</file>
+    <file>markerballs.png</file>
+    <file>modelchild1.png</file>
+    <file>modelchild2.png</file>
+    <file>models.png</file>
+    <file>patientball.png</file>
+    <file>play.png</file>
+    <file>running.png</file>
+    <file>save.png</file>
+    <file>sessionball.png</file>
+    <file>shinyball.png</file>
+    <file>subplay.png</file>
+    <file>subsubplay.png</file>
+    <file>success.png</file>
+    <file>trialball.png</file>
+    <file>uparrow.png</file>
+    <file>vskball.png</file>
+  </qresource>
+</RCC>

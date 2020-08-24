@@ -1,0 +1,3 @@
+pyrcc5 -o C:\Users\M.Hollands\PycharmProjects\pyCGM_Studio\resources_rc.py C:\Users\M.Hollands\PycharmProjects\pyCGM_Studio\resources\resources.qrc
+
+pyuic5 -o C:\Users\M.Hollands\PycharmProjects\pyCGM_Studio\ui\gui.py C:\Users\M.Hollands\PycharmProjects\pyCGM_Studio\ui\gui.ui
