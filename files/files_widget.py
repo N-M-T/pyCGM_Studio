@@ -46,9 +46,8 @@ class Files:
                             padding:2px;}"""
 
         # file browser model tree
-        # self.path = ''
+        self.path = ''
         # self.path = 'C:/Users/M.Hollands/Desktop/'
-        self.path = 'C:/Users/M.Hollands/Desktop/'
         # self.path = "C:/Users/M.Hollands/Desktop/pyCGM-master/SampleData/Sample_2"
         # self.path = QtCore.QDir.currentPath()
         # self.path = "C:/Users/M.Hollands/Desktop/Dunhill project/Decor/Decor_staircase_Vicon_Processed/"

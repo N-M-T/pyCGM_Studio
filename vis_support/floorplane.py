@@ -33,10 +33,11 @@ def build_plane(position, params, colour):
     rgrid.SetYCoordinates(y_coords)
     rgrid.SetZCoordinates(z_coords)
     
-    # Extract a plane from the grid to see what we've got.
+    # Extract a plane from the grid
     plane = vtk.vtkRectilinearGridGeometryFilter()
     plane.SetInputData(rgrid)
     plane.SetExtent(0, 46, 0, 46, 0, 0)
+
     rgrid_mapper = vtk.vtkPolyDataMapper()
     rgrid_mapper.SetInputConnection(plane.GetOutputPort())
     

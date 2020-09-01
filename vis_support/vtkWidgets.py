@@ -45,9 +45,12 @@ class VTK3d(QtWidgets.QWidget):
         self.camera = self.ren.GetActiveCamera()
 
         # set floor plane
-        self.ren.AddActor(build_plane(position=.2, params=(0, 5600, 800), colour=(1, 1, 1)))
-        self.ren.AddActor(build_plane(position=0, params=(0, 5000, 200), colour=(.4, .4, .4)))
-        self.ren.AddActor(build_plane(position=.2, params=(0, 5600, 800), colour=(1, 1, 1)))
+        self.floor_actors = [build_plane(position=.2, params=(0, 5600, 800), colour=(1, 1, 1)),
+                             build_plane(position=0, params=(0, 5000, 200), colour=(.4, .4, .4)),
+                             build_plane(position=.2, params=(0, 5600, 800), colour=(1, 1, 1))]
+
+        for fa in self.floor_actors:
+            self.ren.AddActor(fa)
 
         # set camera properties
         self.camera.Pitch(70.0)

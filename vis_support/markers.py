@@ -62,7 +62,6 @@ class Markers:
                 data = np.empty([len([*self.points]), 3], dtype=float)
                 for ind, (marker, val) in enumerate(self.points.items()):
                     data[ind, :] = val[:3, frame]
-
                 self.vtk_markers_source.append(data)
 
         # update individual marker trajectory
